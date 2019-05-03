@@ -15,10 +15,8 @@ type CMServer struct {
 
 // ConnectionProfile represents ssh/connection descriptions which is used to communicate with CM server and agents
 type ConnectionProfile struct {
-	Name         string `json:"name"`
-	KeyPath      string `json:"key_path"`
-	Port         int    `json:"port"`
-	Username     string `json:"username"`
-	HostJump     bool   `json:"host_jump"`
-	ProxyAddress string `json:"proxy_address"`
+	Name     string `json:"name"`
+	KeyPath  string `json:"key_path"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
 }

@@ -35,8 +35,8 @@ func CreateCMRegistryDb() {
 
 // DropCMRegistryRecords drop all CM server entries from cmctl database
 func DropCMRegistryRecords() {
-	ambariServerRegistries := make([]CMServer, 0)
-	WriteCMServerEntries(ambariServerRegistries)
+	cmServerRegistries := make([]CMServer, 0)
+	WriteCMServerEntries(cmServerRegistries)
 }
 
 // DropConnectionProfileRecords drop all connection profile from cmctl database
@@ -108,7 +108,7 @@ func RegisterNewCMEntry(id string, hostname string, port int, protocol string, u
 }
 
 // RegisterNewConnectionProfile create new connection profile entry in cmctl database
-func RegisterNewConnectionProfile(id string, keyPath string, port int, username string, hostJump bool, proxyAddress string) {
+func RegisterNewConnectionProfile(id string, keyPath string, port int, username string) {
 	checkId := GetConnectionProfileEntryId(id)
 	if len(checkId) > 0 {
 		alreadyExistMsg := fmt.Sprintf("Connection profile with id '%s' is already defined as a profile entry", checkId)
@@ -116,7 +116,7 @@ func RegisterNewConnectionProfile(id string, keyPath string, port int, username 
 		os.Exit(1)
 	}
 	connectionProfiles := ListConnectionProfileEntries()
-	newConnectionProfile := ConnectionProfile{Name: id, KeyPath: keyPath, Port: port, Username: username, HostJump: hostJump, ProxyAddress: proxyAddress}
+	newConnectionProfile := ConnectionProfile{Name: id, KeyPath: keyPath, Port: port, Username: username}
 	connectionProfiles = append(connectionProfiles, newConnectionProfile)
 	WriteConnectionProfileEntries(connectionProfiles)
 }
@@ -236,7 +236,7 @@ func DeactiveAllCMRegistry() {
 	WriteCMServerEntries(cmServers)
 }
 
-// WriteCMServerEntries write ambari server entries to the CM server registry json file
+// WriteCMServerEntries write CM server entries to the CM server registry json file
 func WriteCMServerEntries(cmServers []CMServer) {
 	cmServerJson, _ := json.Marshal(cmServers)
 	cmServerJsonFile := getJsonDbFile(cmServerJsonFileName)
