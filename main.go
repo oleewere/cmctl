@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/oleewere/cmctl/cm"
 	"github.com/urfave/cli"
 )
 
@@ -29,6 +30,18 @@ func main() {
 	}
 
 	app.Commands = []cli.Command{}
+
+	initCommand := cli.Command{
+		Name:  "init",
+		Usage: "Initialize CM server database",
+		Action: func(c *cli.Context) error {
+			cm.CreateCMRegistryDb()
+			fmt.Println("CM registry DB has been initialized.")
+			return nil
+		},
+	}
+
+	app.Commands = append(app.Commands, initCommand)
 	err := app.Run(os.Args)
 	if err != nil {
 		fmt.Println(err)
