@@ -162,6 +162,26 @@ func main() {
 		},
 	}
 
+	listCommand := cli.Command{
+		Name:    "list",
+		Aliases: []string{"ls"},
+		Usage:   "Print all registered CM servers",
+		Action: func(c *cli.Context) error {
+			cmServerEntries := cm.ListCMRegistryEntries()
+			var tableData [][]string
+			for _, cmServer := range cmServerEntries {
+				activeValue := "false"
+				if cmServer.Active {
+					activeValue = "true"
+				}
+				tableData = append(tableData, []string{cmServer.Name, cmServer.Hostname, strconv.Itoa(cmServer.Port), cmServer.Protocol,
+					cmServer.Username, "********", cmServer.Cluster, cmServer.ConnectionProfile, activeValue})
+			}
+			printTable("CM SERVERS:", []string{"Name", "HOSTNAME", "PORT", "PROTOCOL", "USER", "PASSWORD", "CLUSTER", "PROFILE", "ACTIVE"}, tableData, c)
+			return nil
+		},
+	}
+
 	profileCommand := cli.Command{
 		Name:  "profiles",
 		Usage: "Connection profiles related commands",
@@ -299,6 +319,7 @@ func main() {
 
 	app.Commands = append(app.Commands, initCommand)
 	app.Commands = append(app.Commands, createCommand)
+	app.Commands = append(app.Commands, listCommand)
 	app.Commands = append(app.Commands, deleteCommand)
 	app.Commands = append(app.Commands, clearCommand)
 	app.Commands = append(app.Commands, useCommand)
