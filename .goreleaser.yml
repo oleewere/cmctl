@@ -1,0 +1,65 @@
+builds:
+- main: main.go
+  binary: cmctl
+  goos:
+  - linux
+  goarch:
+  - amd64
+  ldflags:
+  - -s -X main.Version={{.Version}} -X main.GitRevString={{.Commit}}
+  env:
+  - CGO_ENABLED=0
+- main: main.go
+  binary: cmctl
+  goos:
+  - darwin
+  goarch:
+  - amd64
+  ldflags:
+  - -s -X main.Version={{.Version}} -X main.GitRevString={{.Commit}}
+  env:
+  - CGO_ENABLED=0
+- main: main.go
+  binary: cmctl
+  goos:
+  - windows
+  goarch:
+  - amd64
+  ldflags:
+  - -s -X main.Version={{.Version}} -X main.GitRevString={{.Commit}}
+  env:
+  - CGO_ENABLED=0
+archive:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  replacements:
+    amd64: 64-bit
+    386: 32-bit
+    darwin: macOS
+  format_overrides:
+    - goos: windows
+      format: zip
+checksum:
+  name_template: 'SHA256.txt'
+snapshot:
+  name_template: SNAPSHOT-{{.Commit}}
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+brew:
+  name: cmctl
+  github:
+    owner: oleewere
+    name: homebrew-repo
+  commit_author:
+    name: oleewere
+    email: oleewere@gmail.com
+  folder: Formula
+  homepage: "https://github.com/oleewere"
+  description: "Software to manage multiple Ambari servers."
+  test: |
+    system "#{bin}/cmctl --version"
+  install: |
+    bin.install "cmctl"
