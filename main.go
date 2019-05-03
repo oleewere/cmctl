@@ -47,6 +47,121 @@ func main() {
 		},
 	}
 
+	createCommand := cli.Command{
+		Name:  "create",
+		Usage: "Register new CM server entry",
+		Action: func(c *cli.Context) error {
+			name := cm.GetStringFlag(c.String("name"), "", "Enter CM server name")
+			cmEntryId := cm.GetCMEntryId(name)
+			if len(cmEntryId) > 0 {
+				fmt.Println("CM server entry already exists with id " + name)
+				os.Exit(1)
+			}
+			host := cm.GetStringFlag(c.String("host"), "", "Enter CM host name")
+			portStr := cm.GetStringFlag(c.String("port"), "8080", "Enter CM port")
+			port, err := strconv.Atoi(portStr)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			protocol := strings.ToLower(cm.GetStringFlag(c.String("protocol"), "http", "Enter CM protocol"))
+			if protocol != "http" && protocol != "https" {
+				fmt.Println("Use 'http' or 'https' value for protocol option")
+				os.Exit(1)
+			}
+			username := strings.ToLower(cm.GetStringFlag(c.String("username"), "admin", "Enter CM user"))
+			password := cm.GetPassword(c.String("password"), "Enter CM user password")
+			cluster := cm.GetStringFlag(c.String("cluster"), "", "Enter CM cluster")
+
+			cm.DeactiveAllCMRegistry()
+			cm.RegisterNewCMEntry(name, host, port, protocol,
+				username, password, cluster)
+			fmt.Println("New CM server entry has been created: " + name)
+			return nil
+		},
+		Flags: []cli.Flag{
+			cli.StringFlag{Name: "name", Usage: "Name of the CM server entry"},
+			cli.StringFlag{Name: "host", Usage: "Hostname of the CM server"},
+			cli.StringFlag{Name: "port", Usage: "Port for CM Server"},
+			cli.StringFlag{Name: "protocol", Usage: "Protocol for CM REST API: http/https"},
+			cli.StringFlag{Name: "username", Usage: "User name for CM server"},
+			cli.StringFlag{Name: "password", Usage: "Password for CM user"},
+			cli.StringFlag{Name: "cluster", Usage: "Cluster name"},
+		},
+	}
+
+	deleteCommand := cli.Command{
+		Name:  "delete",
+		Usage: "De-register an existing CM server entry",
+		Action: func(c *cli.Context) error {
+			if len(c.Args()) == 0 {
+				fmt.Println("Provide a registry name argument for use command. e.g.: delete vagrant")
+				os.Exit(1)
+			}
+			name := c.Args().First()
+			cmEntryId := cm.GetCMEntryId(name)
+			if len(cmEntryId) == 0 {
+				fmt.Println("CM registry entry does not exist with id " + name)
+				os.Exit(1)
+			}
+			cm.DeRegisterCMEntry(name)
+			fmt.Println("CM registry de-registered with id: " + name)
+			return nil
+		},
+		Flags: []cli.Flag{
+			cli.StringFlag{Name: "name", Usage: "name of the CM registry entry"},
+		},
+	}
+
+	useCommand := cli.Command{
+		Name:  "use",
+		Usage: "Use selected CM server",
+		Action: func(c *cli.Context) error {
+			if len(c.Args()) == 0 {
+				fmt.Println("Provide a server entry name argument for use command. e.g.: use vagrant")
+				os.Exit(1)
+			}
+			name := c.Args().First()
+			cmEntryId := cm.GetCMEntryId(name)
+			if len(cmEntryId) == 0 {
+				fmt.Println("CM server entry does not exist with id " + name)
+				os.Exit(1)
+			}
+			cm.DeactiveAllCMRegistry()
+			cm.ActiveCMRegistry(name)
+			fmt.Println("CM server entry selected with id: " + name)
+			return nil
+		},
+		Flags: []cli.Flag{
+			cli.StringFlag{Name: "name", Usage: "name of the CM registry entry"},
+		},
+	}
+
+	clearCommand := cli.Command{
+		Name:  "clear",
+		Usage: "Drop all CM server records",
+		Action: func(c *cli.Context) error {
+			cm.DropCMRegistryRecords()
+			fmt.Println("CM server entries dropped.")
+			return nil
+		},
+	}
+
+	showCommand := cli.Command{
+		Name:  "show",
+		Usage: "Show active CM server details",
+		Action: func(c *cli.Context) error {
+			cmServer := cm.GetActiveCM()
+			var tableData [][]string
+			if len(cmServer.Name) > 0 {
+				tableData = append(tableData, []string{cmServer.Name, cmServer.Hostname, strconv.Itoa(cmServer.Port), cmServer.Protocol,
+					cmServer.Username, "********", cmServer.Cluster, cmServer.ConnectionProfile, "true"})
+			}
+			printTable("ACTIVE CM SERVER:", []string{"Name", "HOSTNAME", "PORT", "PROTOCOL", "USER", "PASSWORD", "CLUSTER", "PROFILE", "ACTIVE"}, tableData, c)
+			return nil
+		},
+	}
+
 	profileCommand := cli.Command{
 		Name:  "profiles",
 		Usage: "Connection profiles related commands",
@@ -183,6 +298,11 @@ func main() {
 	}
 
 	app.Commands = append(app.Commands, initCommand)
+	app.Commands = append(app.Commands, createCommand)
+	app.Commands = append(app.Commands, deleteCommand)
+	app.Commands = append(app.Commands, clearCommand)
+	app.Commands = append(app.Commands, useCommand)
+	app.Commands = append(app.Commands, showCommand)
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, attachCommand)
 
