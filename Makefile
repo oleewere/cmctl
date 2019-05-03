@@ -35,6 +35,9 @@ last-release:
 version:
 	@echo "Release/Snapshot version: $(VERSION_FOR_BUILD)"
 
+generate-cm-client:
+	rm -rf cm-client && docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/resources/swagger-v32.json -l go -o /local/cm-client -c /local/resources/swagger-cm-client.json
+
 binary:
 	./scripts/release.sh --release-build-only
 
