@@ -34,3 +34,15 @@ last-release:
 
 version:
 	@echo "Release/Snapshot version: $(VERSION_FOR_BUILD)"
+
+binary:
+	./scripts/release.sh --release-build-only
+
+major-release:
+	./scripts/release.sh --release-major
+
+minor-release:
+	./scripts/release.sh --release-minor
+
+patch-release:
+	./scripts/release.sh --release-patch
