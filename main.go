@@ -421,5 +421,10 @@ func validateActiveCM(cmServer cm.CMServer) {
 	if len(cmServer.Name) == 0 {
 		fmt.Println("No active CM server selected. (see 'use' command)")
 		os.Exit(1)
+	} else {
+		if cmServer.UseGateway && len(cmServer.ConnectionProfile) == 0 {
+			fmt.Println("No connection profile attached to CM server/gateway. (see 'profiles' command)")
+			os.Exit(1)
+		}
 	}
 }
