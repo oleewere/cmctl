@@ -57,34 +57,45 @@ func main() {
 				fmt.Println("CM server entry already exists with id " + name)
 				os.Exit(1)
 			}
-			host := cm.GetStringFlag(c.String("host"), "", "Enter CM host name")
-			protocol := strings.ToLower(cm.GetStringFlag(c.String("protocol"), "http", "Enter CM protocol"))
-			if protocol != "http" && protocol != "https" {
-				fmt.Println("Use 'http' or 'https' value for protocol option")
-				os.Exit(1)
-			}
-			defaultPort := "80"
-			if protocol == "https" {
-				defaultPort = "443"
-			}
-			portStr := cm.GetStringFlag(c.String("port"), defaultPort, "Enter CM port")
-			port, err := strconv.Atoi(portStr)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+			host := cm.GetStringFlag(c.String("host"), "", "Enter CM server/gateway address")
+			useGatewayStr := cm.GetStringFlag(c.String("gateway"), "y", "Is CM Cloudbreak managed?")
+			useGateway := cm.EvaluateBoolValueFromString(useGatewayStr)
+			var port int
+			var protocol string
+			if useGateway {
+				protocol = "https"
+				port = 7180
+			} else {
+				protocol = strings.ToLower(cm.GetStringFlag(c.String("protocol"), "http", "Enter CM protocol"))
+				if protocol != "http" && protocol != "https" {
+					fmt.Println("Use 'http' or 'https' value for protocol option")
+					os.Exit(1)
+				}
+				defaultPort := "7180"
+				if protocol == "https" {
+					defaultPort = "443"
+				}
+				portStr := cm.GetStringFlag(c.String("port"), defaultPort, "Enter CM port")
+				var err error
+				port, err = strconv.Atoi(portStr)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 			}
 			username := strings.ToLower(cm.GetStringFlag(c.String("username"), "admin", "Enter CM user"))
 			password := cm.GetPassword(c.String("password"), "Enter CM user password")
 
 			cm.DeactiveAllCMRegistry()
 			cm.RegisterNewCMEntry(name, host, port, protocol,
-				username, password)
+				username, password, useGateway)
 			fmt.Println("New CM server entry has been created: " + name)
 			return nil
 		},
 		Flags: []cli.Flag{
 			cli.StringFlag{Name: "name", Usage: "Name of the CM server entry"},
 			cli.StringFlag{Name: "host", Usage: "Hostname of the CM server"},
+			cli.StringFlag{Name: "gateway", Usage: "Managed by Cloudbreak (y/n)"},
 			cli.StringFlag{Name: "port", Usage: "Port for CM Server"},
 			cli.StringFlag{Name: "protocol", Usage: "Protocol for CM REST API: http/https"},
 			cli.StringFlag{Name: "username", Usage: "User name for CM server"},
@@ -176,10 +187,14 @@ func main() {
 				if cmServer.Active {
 					activeValue = "true"
 				}
-				tableData = append(tableData, []string{cmServer.Name, cmServer.Hostname, strconv.Itoa(cmServer.Port), cmServer.Protocol,
+				gatewayVal := "false"
+				if cmServer.UseGateway {
+					gatewayVal = "true"
+				}
+				tableData = append(tableData, []string{cmServer.Name, cmServer.Hostname, gatewayVal, strconv.Itoa(cmServer.Port), cmServer.Protocol,
 					cmServer.Username, "********", cmServer.ConnectionProfile, activeValue})
 			}
-			printTable("CM SERVERS:", []string{"Name", "HOSTNAME", "PORT", "PROTOCOL", "USER", "PASSWORD", "PROFILE", "ACTIVE"}, tableData, c)
+			printTable("CM SERVERS:", []string{"Name", "HOSTNAME", "GATEWAY", "PORT", "PROTOCOL", "USER", "PASSWORD", "PROFILE", "ACTIVE"}, tableData, c)
 			return nil
 		},
 	}
