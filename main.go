@@ -258,6 +258,42 @@ func main() {
 		},
 	}
 
+	serviesCommand := cli.Command{
+		Name:  "services",
+		Usage: "Service related commands",
+		Subcommands: []cli.Command{
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "Print all services per cluster",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					clusters := cmServer.ListClusters()
+					if len(clusters) == 0 {
+						fmt.Println(fmt.Sprintf("Not found any clusters for CM server with id '%v'", cmServer.Name))
+						os.Exit(1)
+					}
+					// TODO: fill all data first - then print them
+					for index, cluster := range clusters {
+						var tableData [][]string
+						services := cmServer.ListServices(cluster.Name)
+						for _, service := range services {
+							tableData = append(tableData, []string{service.DisplayName, service.State, cluster.DisplayName, service.StaleConfig})
+						}
+						prefixData := ""
+						if index > 0 {
+							prefixData = "\n"
+						}
+						header := fmt.Sprintf("%vSERVICES - %v (%v):", prefixData, cluster.DisplayName, cluster.Name)
+						printTable(header, []string{"NAME", "STATE", "CLUSTER", "CONFIG"}, tableData, c)
+					}
+					return nil
+				},
+			},
+		},
+	}
+
 	profileCommand := cli.Command{
 		Name:  "profiles",
 		Usage: "Connection profiles related commands",
@@ -435,8 +471,9 @@ func main() {
 	app.Commands = append(app.Commands, showCommand)
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, attachCommand)
-	app.Commands = append(app.Commands, listHostsCommand)
 	app.Commands = append(app.Commands, listClustersCommand)
+	app.Commands = append(app.Commands, listHostsCommand)
+	app.Commands = append(app.Commands, serviesCommand)
 
 	err := app.Run(os.Args)
 	if err != nil {

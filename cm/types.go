@@ -49,3 +49,13 @@ type Host struct {
 	ClusterName        string `json:"clusterName,omitempty"`
 	ClusterDisplayName string `json:"clusterDisplayName,omitempty"`
 }
+
+// Service holds service details
+type Service struct {
+	Name        string `json:"name,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+	Type        string `json:"type,omitempty"`
+	State       string `json:"serviceState,omitempty"`
+	ClusterName string `json:"clusterName,omitempty"`
+	StaleConfig string `json:"configStalenessStatus,omitempty"`
+}

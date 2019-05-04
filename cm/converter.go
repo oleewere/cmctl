@@ -9,13 +9,44 @@ func (c CMItems) ConvertHostsResponse() []Host {
 	return hosts
 }
 
-// ConvertHostsResponse convert items response to Clusters response
+// ConvertClustersResponse convert items response to Clusters response
 func (c CMItems) ConvertClustersResponse() []Cluster {
 	clusters := []Cluster{}
 	for _, item := range c.Items {
 		clusters = createClustersType(item, clusters)
 	}
 	return clusters
+}
+
+// ConvertServicesResponse convert items response to Services response
+func (c CMItems) ConvertServicesResponse(cluster string) []Service {
+	services := []Service{}
+	for _, item := range c.Items {
+		services = createServiceType(item, services, cluster)
+	}
+	return services
+}
+
+func createServiceType(item Item, services []Service, cluster string) []Service {
+	service := Service{}
+	if name, ok := item["name"]; ok {
+		service.Name = name.(string)
+	}
+	if displayName, ok := item["displayName"]; ok {
+		service.DisplayName = displayName.(string)
+	}
+	if serviceType, ok := item["type"]; ok {
+		service.Type = serviceType.(string)
+	}
+	if state, ok := item["serviceState"]; ok {
+		service.State = state.(string)
+	}
+	if staleConfig, ok := item["configStalenessStatus"]; ok {
+		service.StaleConfig = staleConfig.(string)
+	}
+	service.ClusterName = cluster
+	services = append(services, service)
+	return services
 }
 
 func createClustersType(item Item, clusters []Cluster) []Cluster {
