@@ -1,21 +1,21 @@
 package cm
 
-// ConvertResponse converts the response items to specific types
-func (c CMItems) ConvertResponse() Response {
-	response := Response{}
+// ConvertHostsResponse convert items response to Hosts response
+func (c CMItems) ConvertHostsResponse() []Host {
 	hosts := []Host{}
+	for _, item := range c.Items {
+		hosts = createHostsType(item, hosts)
+	}
+	return hosts
+}
+
+// ConvertHostsResponse convert items response to Clusters response
+func (c CMItems) ConvertClustersResponse() []Cluster {
 	clusters := []Cluster{}
 	for _, item := range c.Items {
 		clusters = createClustersType(item, clusters)
-		hosts = createHostsType(item, hosts)
 	}
-	if len(hosts) > 0 {
-		response.Hosts = hosts
-	}
-	if len(hosts) > 0 {
-		response.Hosts = hosts
-	}
-	return response
+	return clusters
 }
 
 func createClustersType(item Item, clusters []Cluster) []Cluster {
@@ -50,7 +50,7 @@ func createHostsType(item Item, hosts []Host) []Host {
 	if commissionState, ok := item["commissionState"]; ok {
 		host.CommissionState = commissionState.(string)
 	}
-	if rackID, ok := item["commissionState"]; ok {
+	if rackID, ok := item["rackId"]; ok {
 		host.RackID = rackID.(string)
 	}
 	if clusterRefVal, ok := item["clusterRef"]; ok {

@@ -30,13 +30,7 @@ type CMItems struct {
 // Item dynamic map - cast contents to specific types
 type Item map[string]interface{}
 
-// Response common type which wraps all of the possible response entry types
-type Response struct {
-	Clusters []Cluster
-	Hosts    []Host
-}
-
-// Cluster holds installed ambari cluster details
+// Cluster holds installed CM cluster details
 type Cluster struct {
 	Name        string `json:"name,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`

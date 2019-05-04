@@ -50,8 +50,6 @@ func (c CMServer) CreatePutRequest(body bytes.Buffer, urlSuffix string) *http.Re
 
 // GetCMUri creates the CM uri with /api/vx/ suffix (+ /api/vx/clusters/<cluster> suffix is useCluster is enabled)
 func (c CMServer) GetCMUri(uriSuffix string) string {
-	url := fmt.Sprintf("%s://%s:%v/api/%s/%s", c.Protocol, c.Hostname, c.Port, apiVersion, uriSuffix)
-	fmt.Println(url)
 	return fmt.Sprintf("%s://%s:%v/api/%s/%s", c.Protocol, c.Hostname, c.Port, apiVersion, uriSuffix)
 }
 
@@ -73,6 +71,16 @@ func GetHttpClient() *http.Client {
 // ProcessCMItems get "items" from CM server response
 func ProcessCMItems(request *http.Request) CMItems {
 	bodyBytes := ProcessRequest(request)
+	return ProcessCMItemsFromBytes(bodyBytes)
+}
+
+// ProcessCMItemsFromSSHResponse get "items" from CM gateway SSH response
+func ProcessCMItemsFromSSHResponse(sshResponse RemoteResponse) CMItems {
+	return ProcessCMItemsFromBytes([]byte(sshResponse.StdOut))
+}
+
+// ProcessCMItemsFromBytes get "items" from bytes
+func ProcessCMItemsFromBytes(bodyBytes []byte) CMItems {
 	var cmItems CMItems
 	err := json.Unmarshal(bodyBytes, &cmItems)
 	if err != nil {
@@ -120,4 +128,16 @@ func ProcessRequest(request *http.Request) []byte {
 		os.Exit(1)
 	}
 	return bodyBytes
+}
+
+func (c CMServer) CreateGatewayCurlGetCommand(uri string) string {
+	return createGatewayCurlCommand(c, uri, "GET")
+}
+
+func (c CMServer) CreateGatewayCurlPostCommand(uri string) string {
+	return createGatewayCurlCommand(c, uri, "POST")
+}
+
+func createGatewayCurlCommand(c CMServer, uri string, method string) string {
+	return fmt.Sprintf("curl -s -X %v -k -u %v:%v 'http://localhost:7180/api/%v/%v'", method, c.Username, c.Password, apiVersion, uri)
 }
