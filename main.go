@@ -300,7 +300,7 @@ func main() {
 						var tableData [][]string
 						services := cmServer.ListServices(cluster.Name)
 						for _, service := range services {
-							tableData = append(tableData, []string{service.DisplayName, service.State, cluster.DisplayName, service.StaleConfig})
+							tableData = append(tableData, []string{service.DisplayName, service.State, cluster.Name, service.StaleConfig})
 						}
 						prefixData := ""
 						if index > 0 {
@@ -475,7 +475,7 @@ func main() {
 			hosts := cmServer.ListHosts()
 			var tableData [][]string
 			for _, host := range hosts {
-				tableData = append(tableData, []string{host.HostName, host.IPAddress, host.ClusterDisplayName, host.CommissionState, host.RackID})
+				tableData = append(tableData, []string{host.HostName, host.IPAddress, host.ClusterName, host.CommissionState, host.RackID})
 			}
 			printTable("HOSTS:", []string{"HOSTNAME", "IP", "CLUSTER", "STATE", "RACK ID"}, tableData, c)
 			return nil
