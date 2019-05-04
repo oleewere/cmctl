@@ -298,11 +298,11 @@ func main() {
 
 	attachCommand := cli.Command{
 		Name:  "attach",
-		Usage: "Attach a profile to an ambari server entry",
+		Usage: "Attach a profile to an CM server entry",
 		Action: func(c *cli.Context) error {
 			args := c.Args()
 			if len(args) == 0 {
-				fmt.Println("Provide at least 1 argument (<profile>), or 2 (<profile> and <ambariEntry>)")
+				fmt.Println("Provide at least 1 argument (<profile>), or 2 (<profile> and <cmEntry>)")
 				os.Exit(1)
 			}
 			profileId := args.Get(0)
