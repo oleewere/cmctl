@@ -32,6 +32,9 @@ func createClustersType(item Item, clusters []Cluster) []Cluster {
 	if clusterType, ok := item["clusterType"]; ok {
 		cluster.Type = clusterType.(string)
 	}
+	if uuid, ok := item["uuid"]; ok {
+		cluster.UUID = uuid.(string)
+	}
 	clusters = append(clusters, cluster)
 	return clusters
 }

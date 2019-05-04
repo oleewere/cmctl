@@ -32,6 +32,7 @@ type Item map[string]interface{}
 
 // Cluster holds installed CM cluster details
 type Cluster struct {
+	UUID        string `json:"uuid,omitempty"`
 	Name        string `json:"name,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
 	Version     string `json:"fullVersion,omitempty"`
