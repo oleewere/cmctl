@@ -48,7 +48,7 @@ func (c CMServer) CreatePutRequest(body bytes.Buffer, urlSuffix string) *http.Re
 
 // GetCMUri creates the CM uri with /api/vx/ suffix (+ /api/vx/clusters/<cluster> suffix is useCluster is enabled)
 func (c CMServer) GetCMUri(uriSuffix string) string {
-	return fmt.Sprintf("%s://%s:%v/api/%s/%s", c.Protocol, c.Hostname, c.Port, apiVersion, uriSuffix)
+	return fmt.Sprintf("%s://%s:%v/api/%s/%s", c.Protocol, c.Hostname, c.Port, c.ApiVersion, uriSuffix)
 }
 
 // GetHttpClient create HTTP client instance for Ambari
