@@ -94,7 +94,7 @@ func GetConnectionProfileEntryId(id string) string {
 }
 
 // RegisterNewCMEntry create new CM server registry entry in cmctl database
-func RegisterNewCMEntry(id string, hostname string, port int, protocol string, username string, password string, cluster string) {
+func RegisterNewCMEntry(id string, hostname string, port int, protocol string, username string, password string) {
 	checkId := GetCMEntryId(id)
 	if len(checkId) > 0 {
 		alreadyExistMsg := fmt.Sprintf("Registry with id '%s' is already defined as a registry entry", checkId)
@@ -102,7 +102,7 @@ func RegisterNewCMEntry(id string, hostname string, port int, protocol string, u
 		os.Exit(1)
 	}
 	cmServerEntries := ListCMRegistryEntries()
-	newCmServerEntry := CMServer{Name: id, Hostname: hostname, Port: port, Protocol: protocol, Username: username, Password: password, Cluster: cluster, Active: true}
+	newCmServerEntry := CMServer{Name: id, Hostname: hostname, Port: port, Protocol: protocol, Username: username, Password: password, Active: true}
 	cmServerEntries = append(cmServerEntries, newCmServerEntry)
 	WriteCMServerEntries(cmServerEntries)
 }

@@ -8,7 +8,6 @@ type CMServer struct {
 	Username          string `json:"username"`
 	Password          string `json:"password"`
 	Protocol          string `json:"protocol"`
-	Cluster           string `json:"cluster"`
 	Active            bool   `json:"active"`
 	ConnectionProfile string `json:"profile"`
 }
@@ -21,6 +20,36 @@ type ConnectionProfile struct {
 	Username string `json:"username"`
 }
 
-// Host
+// CMItems global items from CM Server rest API response
+type CMItems struct {
+	Href  string `json:"href"`
+	Items []Item `json:"items"`
+}
+
+// Item dynamic map - cast contents to specific types
+type Item map[string]interface{}
+
+// Response common type which wraps all of the possible response entry types
+type Response struct {
+	Clusters []Cluster
+	Hosts    []Host
+}
+
+// Cluster holds installed ambari cluster details
+type Cluster struct {
+	Name        string `json:"name,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+	Version     string `json:"fullVersion,omitempty"`
+	Type        string `json:"clusterType,omitempty"`
+}
+
+// Host holds host details
 type Host struct {
+	HostID             string `json:"hostId,omitempty"`
+	IPAddress          string `json:"ipAddress,omitempty"`
+	HostName           string `json:"hostName,omitempty"`
+	CommissionState    string `json:"commissionState,omitempty"`
+	RackID             string `json:"rackId,omitempty"`
+	ClusterName        string `json:"clusterName,omitempty"`
+	ClusterDisplayName string `json:"clusterDisplayName,omitempty"`
 }

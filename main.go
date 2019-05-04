@@ -58,24 +58,27 @@ func main() {
 				os.Exit(1)
 			}
 			host := cm.GetStringFlag(c.String("host"), "", "Enter CM host name")
-			portStr := cm.GetStringFlag(c.String("port"), "8080", "Enter CM port")
-			port, err := strconv.Atoi(portStr)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
 			protocol := strings.ToLower(cm.GetStringFlag(c.String("protocol"), "http", "Enter CM protocol"))
 			if protocol != "http" && protocol != "https" {
 				fmt.Println("Use 'http' or 'https' value for protocol option")
 				os.Exit(1)
 			}
+			defaultPort := "80"
+			if protocol == "https" {
+				defaultPort = "443"
+			}
+			portStr := cm.GetStringFlag(c.String("port"), defaultPort, "Enter CM port")
+			port, err := strconv.Atoi(portStr)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 			username := strings.ToLower(cm.GetStringFlag(c.String("username"), "admin", "Enter CM user"))
 			password := cm.GetPassword(c.String("password"), "Enter CM user password")
-			cluster := cm.GetStringFlag(c.String("cluster"), "", "Enter CM cluster")
 
 			cm.DeactiveAllCMRegistry()
 			cm.RegisterNewCMEntry(name, host, port, protocol,
-				username, password, cluster)
+				username, password)
 			fmt.Println("New CM server entry has been created: " + name)
 			return nil
 		},
@@ -86,7 +89,6 @@ func main() {
 			cli.StringFlag{Name: "protocol", Usage: "Protocol for CM REST API: http/https"},
 			cli.StringFlag{Name: "username", Usage: "User name for CM server"},
 			cli.StringFlag{Name: "password", Usage: "Password for CM user"},
-			cli.StringFlag{Name: "cluster", Usage: "Cluster name"},
 		},
 	}
 
@@ -155,9 +157,9 @@ func main() {
 			var tableData [][]string
 			if len(cmServer.Name) > 0 {
 				tableData = append(tableData, []string{cmServer.Name, cmServer.Hostname, strconv.Itoa(cmServer.Port), cmServer.Protocol,
-					cmServer.Username, "********", cmServer.Cluster, cmServer.ConnectionProfile, "true"})
+					cmServer.Username, "********", cmServer.ConnectionProfile, "true"})
 			}
-			printTable("ACTIVE CM SERVER:", []string{"Name", "HOSTNAME", "PORT", "PROTOCOL", "USER", "PASSWORD", "CLUSTER", "PROFILE", "ACTIVE"}, tableData, c)
+			printTable("ACTIVE CM SERVER:", []string{"Name", "HOSTNAME", "PORT", "PROTOCOL", "USER", "PASSWORD", "PROFILE", "ACTIVE"}, tableData, c)
 			return nil
 		},
 	}
@@ -175,9 +177,9 @@ func main() {
 					activeValue = "true"
 				}
 				tableData = append(tableData, []string{cmServer.Name, cmServer.Hostname, strconv.Itoa(cmServer.Port), cmServer.Protocol,
-					cmServer.Username, "********", cmServer.Cluster, cmServer.ConnectionProfile, activeValue})
+					cmServer.Username, "********", cmServer.ConnectionProfile, activeValue})
 			}
-			printTable("CM SERVERS:", []string{"Name", "HOSTNAME", "PORT", "PROTOCOL", "USER", "PASSWORD", "CLUSTER", "PROFILE", "ACTIVE"}, tableData, c)
+			printTable("CM SERVERS:", []string{"Name", "HOSTNAME", "PORT", "PROTOCOL", "USER", "PASSWORD", "PROFILE", "ACTIVE"}, tableData, c)
 			return nil
 		},
 	}
@@ -317,6 +319,38 @@ func main() {
 		},
 	}
 
+	listClustersCommand := cli.Command{
+		Name:  "clusters",
+		Usage: "Print all registered CM clusters",
+		Action: func(c *cli.Context) error {
+			cmServer := cm.GetActiveCM()
+			validateActiveCM(cmServer)
+			clusters := cmServer.ListClusters()
+			var tableData [][]string
+			for _, cluster := range clusters {
+				tableData = append(tableData, []string{cluster.Name, cluster.DisplayName, cluster.Version, cluster.Type})
+			}
+			printTable("CLUSTERS:", []string{"NAME", "DISPLAY NAME", "VERSION", "TYPE"}, tableData, c)
+			return nil
+		},
+	}
+
+	listHostsCommand := cli.Command{
+		Name:  "hosts",
+		Usage: "Print all registered CM hosts",
+		Action: func(c *cli.Context) error {
+			cmServer := cm.GetActiveCM()
+			validateActiveCM(cmServer)
+			hosts := cmServer.ListHosts()
+			var tableData [][]string
+			for _, host := range hosts {
+				tableData = append(tableData, []string{host.HostName, host.IPAddress, host.CommissionState, host.RackID, host.ClusterDisplayName})
+			}
+			printTable("HOSTS:", []string{"HOSTNAME", "IP", "STATE", "RACK ID", "CLUSTER"}, tableData, c)
+			return nil
+		},
+	}
+
 	app.Commands = append(app.Commands, initCommand)
 	app.Commands = append(app.Commands, createCommand)
 	app.Commands = append(app.Commands, listCommand)
@@ -326,6 +360,8 @@ func main() {
 	app.Commands = append(app.Commands, showCommand)
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, attachCommand)
+	app.Commands = append(app.Commands, listHostsCommand)
+	app.Commands = append(app.Commands, listClustersCommand)
 
 	err := app.Run(os.Args)
 	if err != nil {
@@ -364,4 +400,11 @@ func formatJson(b []byte) *bytes.Buffer {
 		os.Exit(1)
 	}
 	return &out
+}
+
+func validateActiveCM(cmServer cm.CMServer) {
+	if len(cmServer.Name) == 0 {
+		fmt.Println("No active CM server selected. (see 'use' command)")
+		os.Exit(1)
+	}
 }
