@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-const apiVersion = "v32"
-
 // CreateGetRequest creates an CM Server GET request
 func (c CMServer) CreateGetRequest(urlSuffix string) *http.Request {
 	uri := c.GetCMUri(urlSuffix)
@@ -139,5 +137,5 @@ func (c CMServer) CreateGatewayCurlPostCommand(uri string) string {
 }
 
 func createGatewayCurlCommand(c CMServer, uri string, method string) string {
-	return fmt.Sprintf("curl -s -X %v -k -u %v:%v 'http://localhost:7180/api/%v/%v'", method, c.Username, c.Password, apiVersion, uri)
+	return fmt.Sprintf("curl -s -X %v -k -u %v:%v 'http://localhost:7180/api/%v/%v'", method, c.Username, c.Password, c.ApiVersion, uri)
 }
