@@ -11,6 +11,7 @@ type CMServer struct {
 	Active            bool   `json:"active"`
 	ConnectionProfile string `json:"profile"`
 	UseGateway        bool   `json:"gateway"`
+	ApiVersion        int    `json:"version"`
 }
 
 // ConnectionProfile represents ssh/connection descriptions which is used to communicate with CM server and agents

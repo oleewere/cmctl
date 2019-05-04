@@ -20,6 +20,9 @@ var Version string
 // GitRevString that will be generated during the build as a constant - represents git revision value
 var GitRevString string
 
+// DefaultApiVersion number that is used as api versions in REST api requests e.g. (32): api/v32/..
+const DefaultApiVersion = 32
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "cmctl"
@@ -86,9 +89,17 @@ func main() {
 			username := strings.ToLower(cm.GetStringFlag(c.String("username"), "admin", "Enter CM user"))
 			password := cm.GetPassword(c.String("password"), "Enter CM user password")
 
+			apiVersion := cm.GetStringFlag(c.String("verion"), strconv.Itoa(DefaultApiVersion), "Enter CM API version")
+			apiVersionNum, err := strconv.Atoi(apiVersion)
+
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
 			cm.DeactiveAllCMRegistry()
 			cm.RegisterNewCMEntry(name, host, port, protocol,
-				username, password, useGateway)
+				username, password, useGateway, apiVersionNum)
 			fmt.Println("New CM server entry has been created: " + name)
 			return nil
 		},
@@ -100,6 +111,7 @@ func main() {
 			cli.StringFlag{Name: "protocol", Usage: "Protocol for CM REST API: http/https"},
 			cli.StringFlag{Name: "username", Usage: "User name for CM server"},
 			cli.StringFlag{Name: "password", Usage: "Password for CM user"},
+			cli.StringFlag{Name: "version", Usage: "CM Api Version"},
 		},
 	}
 
@@ -147,8 +159,16 @@ func main() {
 			username := strings.ToLower(cm.GetStringFlag(c.String("username"), existingCmServer.Username, "Enter CM user"))
 			password := cm.GetPassword(c.String("password"), "Enter CM user password")
 
+			apiVersion := cm.GetStringFlag(c.String("verion"), strconv.Itoa(DefaultApiVersion), "Enter CM API version")
+			apiVersionNum, err := strconv.Atoi(apiVersion)
+
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
 			cm.UpdateCMEntry(cmServerName, host, port, protocol,
-				username, password, useGateway, existingCmServer.ConnectionProfile)
+				username, password, useGateway, apiVersionNum, existingCmServer.ConnectionProfile)
 			fmt.Println("CM server entry has been updated: " + cmServerName)
 			return nil
 		},
@@ -159,6 +179,7 @@ func main() {
 			cli.StringFlag{Name: "protocol", Usage: "Protocol for CM REST API: http/https"},
 			cli.StringFlag{Name: "username", Usage: "User name for CM server"},
 			cli.StringFlag{Name: "password", Usage: "Password for CM user"},
+			cli.StringFlag{Name: "version", Usage: "CM Api Version"},
 		},
 	}
 
