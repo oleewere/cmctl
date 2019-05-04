@@ -20,3 +20,7 @@ type ConnectionProfile struct {
 	Port     int    `json:"port"`
 	Username string `json:"username"`
 }
+
+// Host
+type Host struct {
+}
