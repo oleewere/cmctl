@@ -643,7 +643,7 @@ func main() {
 					}
 					command := c.String("command")
 					if len(command) == 0 {
-						fmt.Println("Command paramter is missing! (use 'command' or 'c')")
+						fmt.Println("Command parameter is missing! (use 'command' or 'c')")
 						os.Exit(1)
 					}
 					cmServer.ExecuteSaltCommand(command, c.String("prefix"), c.String("binary"))
@@ -680,7 +680,7 @@ func main() {
 			validateActiveCM(cmServer)
 			command := c.String("command")
 			if len(command) == 0 {
-				fmt.Println("Command paramter is missing! (use 'command' or 'c')")
+				fmt.Println("Command parameter is missing! (use 'command' or 'c')")
 				os.Exit(1)
 			}
 			filter := cm.CreateFilter(c.String("clusters"), c.String("services"), c.String("hosts"), c.Bool("server"))

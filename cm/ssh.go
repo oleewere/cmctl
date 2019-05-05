@@ -38,7 +38,7 @@ func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool) RemoteRe
 			panic("Can't run remote command: " + err.Error())
 		} else {
 			if len(stdout) == 0 {
-				fmt.Println("Stdout response is emtpy for remote command.")
+				fmt.Println("Stdout response is empty for remote command.")
 			} else {
 				fmt.Println(stdout)
 			}
