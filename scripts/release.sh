@@ -99,6 +99,16 @@ function release_and_push_actual_branch() {
   git push origin $actual_branch
 }
 
+function update_readme_version() {
+  local next_release="$1"
+  local readme_md_location="$CMCTL_ROOT_DIR/README.md"
+  local version_number=$(get_version_number $next_release)
+  sed -i.bak "s/CMCTL_VERSION=[[:digit:]]\.[[:digit:]]\.[[:digit:]]/CMCTL_VERSION=${new_version}/" "$readme_md_location"
+  rm "$readme_md_location.bak"
+  git add "$readme_md_location"
+  git commit -m "Update README.md (for release version: $next_release)"
+}
+
 function release_major() {
   echo "Create major release ..."
   local branch_name=$(get_branch_name)
@@ -111,6 +121,7 @@ function release_major() {
     local new_branch=$(new_branch_name $next_release)
     echo "New branch: $new_branch"
     user_confirmation
+    update_readme_version "$next_release"
     release_and_push_new_branch "$next_release" "$new_branch"
   else
     echo "Major release can be created only on master branch. Exiting ..."
@@ -130,6 +141,7 @@ function release_minor() {
     local new_branch=$(new_branch_name $next_release)
     echo "New branch: $new_branch"
     user_confirmation
+    update_readme_version "$next_release"
     release_and_push_new_branch "$next_release" "$new_branch"
   else
     echo "Minor release can be created only on master branch. Exiting ..."
@@ -151,6 +163,7 @@ function release_patch() {
     local next_release=$(next_patch_release $last_release)
     echo "New release: $next_release"
     user_confirmation
+    update_readme_version "$next_release"
     release_and_push_actual_branch "$next_release" "$branch_name"
   else
     echo "Patch release cannot be created on master branch. Exiting ..."
