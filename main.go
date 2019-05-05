@@ -678,10 +678,10 @@ func main() {
 		Action: func(c *cli.Context) error {
 			cmServer := cm.GetActiveCM()
 			validateActiveCM(cmServer)
-			args := c.Args()
-			command := ""
-			for _, arg := range args {
-				command += arg
+			command := c.String("command")
+			if len(command) == 0 {
+				fmt.Println("Command paramter is missing! (use 'command' or 'c')")
+				os.Exit(1)
 			}
 			filter := cm.CreateFilter(c.String("clusters"), c.String("services"), c.String("hosts"), c.Bool("server"))
 			hosts := cmServer.GetFilteredHosts(filter)
@@ -689,9 +689,10 @@ func main() {
 			return nil
 		},
 		Flags: []cli.Flag{
+			cli.StringFlag{Name: "command, c", Usage: "Command to execute on the remote hosts"},
 			cli.BoolFlag{Name: "server", Usage: "Filter on CM server"},
-			cli.StringFlag{Name: "clusters, c", Usage: "Filter on clusters (comma separated)"},
-			cli.StringFlag{Name: "services, s", Usage: "Filter on services (comma separated)"},
+			cli.StringFlag{Name: "clusters", Usage: "Filter on clusters (comma separated)"},
+			cli.StringFlag{Name: "services", Usage: "Filter on services (comma separated)"},
 			cli.StringFlag{Name: "hosts", Usage: "Filter on hosts (comma separated)"},
 		},
 	}
