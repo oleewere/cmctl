@@ -4,16 +4,26 @@ import "strings"
 
 // Filter represents filter on agent hosts (by component / service / hosts)
 type Filter struct {
-	Hosts  []string
-	Server bool
+	Hosts    []string
+	Clusters []string
+	Services []string
+	Server   bool
 }
 
 // CreateFilter will make a Filter object from filter strings (hosts)
-func CreateFilter(hostFilter string, cmServer bool) Filter {
+func CreateFilter(clusterFilter string, serviceFilter string, hostFilter string, cmServer bool) Filter {
 	filter := Filter{}
 	if len(hostFilter) > 0 {
 		hosts := strings.Split(hostFilter, ",")
 		filter.Hosts = hosts
+	}
+	if len(clusterFilter) > 0 {
+		clusters := strings.Split(clusterFilter, ",")
+		filter.Clusters = clusters
+	}
+	if len(serviceFilter) > 0 {
+		services := strings.Split(serviceFilter, ",")
+		filter.Services = services
 	}
 	filter.Server = cmServer
 	return filter

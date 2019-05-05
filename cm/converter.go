@@ -18,6 +18,26 @@ func (c CMItems) ConvertClustersResponse() []Cluster {
 	return clusters
 }
 
+// ConvertDeploymentResponse convert map to Deployment response
+func ConvertDeploymentResponse(responseMap map[string]interface{}) Deployment {
+	deployment := Deployment{}
+	clusters := []Cluster{}
+
+	clusterServiceRoleMap := make(map[string]ServiceRolesMap)
+	deployment.ClusterServiceRoleMap = clusterServiceRoleMap
+
+	if clustersVal, ok := responseMap["clusters"]; ok {
+		clustersI := clustersVal.([]interface{})
+		for _, clusterItemVal := range clustersI {
+			clusterItem := clusterItemVal.(map[string]interface{})
+			clusters = createClustersType(clusterItem, clusters)
+			deployment = fillServicesAndRolesFromCluster(clusterItem, deployment)
+		}
+	}
+	deployment.Clusters = clusters
+	return deployment
+}
+
 // ConvertServicesResponse convert items response to Services response
 func (c CMItems) ConvertServicesResponse(cluster string) []Service {
 	services := []Service{}
@@ -25,6 +45,52 @@ func (c CMItems) ConvertServicesResponse(cluster string) []Service {
 		services = createServiceType(item, services, cluster)
 	}
 	return services
+}
+
+// ConvertRolesResponse convert items response to Roles response
+func (c CMItems) ConvertRolesResponse(cluster string, service string) []Role {
+	roles := []Role{}
+	for _, item := range c.Items {
+		roles = createRoleType(item, roles, cluster, service)
+	}
+	return roles
+}
+
+func createRoleType(item Item, roles []Role, cluster string, service string) []Role {
+	role := Role{}
+
+	if name, ok := item["name"]; ok {
+		role.Name = name.(string)
+	}
+	if typeVal, ok := item["type"]; ok {
+		role.Type = typeVal.(string)
+	}
+	if state, ok := item["roleState"]; ok {
+		role.State = state.(string)
+	}
+	if staleVal, ok := item["configStalenessStatus"]; ok {
+		role.StaleConfig = staleVal.(string)
+	}
+	if commissionState, ok := item["commissionState"]; ok {
+		role.ComissionState = commissionState.(string)
+	}
+	if roleConfigGroupRefVal, ok := item["roleConfigGroupRef"]; ok {
+		roleConfigGroupRef := roleConfigGroupRefVal.(map[string]interface{})
+		if roleConfigGroupName, ok := roleConfigGroupRef["roleConfigGroupName"]; ok {
+			role.ConfigGroup = roleConfigGroupName.(string)
+		}
+	}
+	if hostRefVal, ok := item["hostRef"]; ok {
+		hostRef := hostRefVal.(map[string]interface{})
+		if hostname, ok := hostRef["hostname"]; ok {
+			role.HostName = hostname.(string)
+		}
+	}
+	role.ClusterName = cluster
+	role.ServiceName = service
+
+	roles = append(roles, role)
+	return roles
 }
 
 func createServiceType(item Item, services []Service, cluster string) []Service {
@@ -98,4 +164,35 @@ func createHostsType(item Item, hosts []Host) []Host {
 	}
 	hosts = append(hosts, host)
 	return hosts
+}
+
+func fillServicesAndRolesFromCluster(clusterMap map[string]interface{}, deployment Deployment) Deployment {
+	services := deployment.Services
+	clusterName := clusterMap["name"].(string)
+	deployment.ClusterServiceRoleMap[clusterName] = ServiceRolesMap{RolesMap: make(map[string][]Role)}
+	if servicesVal, ok := clusterMap["services"]; ok {
+		servicesI := servicesVal.([]interface{})
+		for _, serviceItemVal := range servicesI {
+			serviceItem := serviceItemVal.(map[string]interface{})
+			services = createServiceType(serviceItem, services, clusterName)
+			deployment = fillRolesFromClusterAndService(serviceItem, clusterName, deployment)
+		}
+	}
+	deployment.Services = services
+	return deployment
+}
+
+func fillRolesFromClusterAndService(serviceMap map[string]interface{}, clusterName string, deployment Deployment) Deployment {
+	roleArray := make([]Role, 0)
+	serviceName := serviceMap["name"].(string)
+	serviceRolesMap := deployment.ClusterServiceRoleMap[clusterName].RolesMap
+	if rolesVal, ok := serviceMap["roles"]; ok {
+		rolesI := rolesVal.([]interface{})
+		for _, roleItemVal := range rolesI {
+			roleItem := roleItemVal.(map[string]interface{})
+			roleArray = createRoleType(roleItem, roleArray, clusterName, serviceName)
+		}
+	}
+	serviceRolesMap[serviceName] = roleArray
+	return deployment
 }

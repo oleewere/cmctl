@@ -60,3 +60,29 @@ type Service struct {
 	ClusterName string `json:"clusterName,omitempty"`
 	StaleConfig string `json:"configStalenessStatus,omitempty"`
 }
+
+// Role holds role details
+type Role struct {
+	Name           string `json:"name,omitempty"`
+	Type           string `json:"type,omitempty"`
+	HostName       string `json:"hostName,omitempty"`
+	ConfigGroup    string `json:"configGroup,omitempty"`
+	State          string `json:"roleState,omitempty"`
+	StaleConfig    string `json:"configStalenessStatus,omitempty"`
+	ComissionState string `json:"commissionState,omitempty"`
+	ClusterName    string `json:"clusterName,omitempty"`
+	ServiceName    string `json:"serviceName,omitempty"`
+}
+
+// Deployment hold full CM server deployment data
+type Deployment struct {
+	Clusters              []Cluster
+	Services              []Service
+	Hosts                 []Host
+	ClusterServiceRoleMap map[string]ServiceRolesMap
+}
+
+// ServiceRolesMap holds service - roles map
+type ServiceRolesMap struct {
+	RolesMap map[string][]Role
+}

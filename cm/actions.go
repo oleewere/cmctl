@@ -43,3 +43,17 @@ func (c CMServer) ListServices(cluster string) []Service {
 	}
 	return cmItems.ConvertServicesResponse(cluster)
 }
+
+// GetDeployment get full deployement data for CM server
+func (c CMServer) GetDeployment() Deployment {
+	var deploymentMap map[string]interface{}
+	var uri = fmt.Sprintf("cm/deployment")
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		deploymentMap = ProcessAsMapFromSSHResponse(c.RunGatewayCMCommand(curlCommand))
+	} else {
+		request := c.CreateGetRequest(uri)
+		deploymentMap = ProcessAsMap(request)
+	}
+	return ConvertDeploymentResponse(deploymentMap)
+}

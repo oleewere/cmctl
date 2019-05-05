@@ -90,7 +90,16 @@ func ProcessCMItemsFromBytes(bodyBytes []byte) CMItems {
 
 // ProcessAsMap get map format response
 func ProcessAsMap(request *http.Request) map[string]interface{} {
-	bodyBytes := ProcessRequest(request)
+	return ProcessAsMapFromBytes(ProcessRequest(request))
+}
+
+// ProcessAsMapFromSSHResponse get JSON map from CM gateway SSH response
+func ProcessAsMapFromSSHResponse(sshResponse RemoteResponse) map[string]interface{} {
+	return ProcessAsMapFromBytes([]byte(sshResponse.StdOut))
+}
+
+// ProcessAsMapFromBytes get JSON map from bytes
+func ProcessAsMapFromBytes(bodyBytes []byte) map[string]interface{} {
 	var responseMap map[string]interface{}
 	err := json.Unmarshal(bodyBytes, &responseMap)
 	if err != nil {

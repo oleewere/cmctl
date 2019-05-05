@@ -300,14 +300,14 @@ func main() {
 						var tableData [][]string
 						services := cmServer.ListServices(cluster.Name)
 						for _, service := range services {
-							tableData = append(tableData, []string{service.DisplayName, service.State, cluster.Name, service.StaleConfig})
+							tableData = append(tableData, []string{service.Name, service.DisplayName, service.State, cluster.Name, service.StaleConfig})
 						}
 						prefixData := ""
 						if index > 0 {
 							prefixData = "\n"
 						}
 						header := fmt.Sprintf("%vSERVICES - %v (%v):", prefixData, cluster.DisplayName, cluster.Name)
-						printTable(header, []string{"NAME", "STATE", "CLUSTER", "CONFIG"}, tableData, c)
+						printTable(header, []string{"ID", "NAME", "STATE", "CLUSTER", "CONFIG"}, tableData, c)
 					}
 					return nil
 				},
@@ -482,6 +482,54 @@ func main() {
 		},
 	}
 
+	rolesCommand := cli.Command{
+		Name:  "roles",
+		Usage: "Role related commands",
+		Subcommands: []cli.Command{
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "Print all services per cluster",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					filter := cm.CreateFilter(c.String("clusters"), c.String("services"), "", false)
+
+					deployment := cmServer.GetDeployment()
+					clusterServiceRoleMap := deployment.ClusterServiceRoleMap
+					var counter int
+					for cluster, serviceMap := range clusterServiceRoleMap {
+						if len(filter.Clusters) > 0 && !contains(cluster, filter.Clusters) {
+							continue
+						}
+						for service, roles := range serviceMap.RolesMap {
+							if len(filter.Services) > 0 && !contains(service, filter.Services) {
+								continue
+							}
+							var tableData [][]string
+							for _, role := range roles {
+								tableData = append(tableData, []string{role.Name, role.Type, role.HostName, role.ServiceName, role.ClusterName})
+							}
+							prefixData := ""
+							if counter > 0 {
+								prefixData = "\n"
+							}
+							counter++
+							header := fmt.Sprintf("%vRoles - %v (cluster: %v):", prefixData, service, cluster)
+							printTable(header, []string{"NAME", "TYPE", "HOSTNAME", "SERVICE", "CLUSTER"}, tableData, c)
+						}
+
+					}
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "clusters", Usage: "Cluster filter for roles"},
+					cli.StringFlag{Name: "services", Usage: "Service filter for roles"},
+				},
+			},
+		},
+	}
+
 	app.Commands = append(app.Commands, initCommand)
 	app.Commands = append(app.Commands, createCommand)
 	app.Commands = append(app.Commands, listCommand)
@@ -495,6 +543,7 @@ func main() {
 	app.Commands = append(app.Commands, listClustersCommand)
 	app.Commands = append(app.Commands, listHostsCommand)
 	app.Commands = append(app.Commands, serviesCommand)
+	app.Commands = append(app.Commands, rolesCommand)
 
 	err := app.Run(os.Args)
 	if err != nil {
@@ -545,4 +594,13 @@ func validateActiveCM(cmServer cm.CMServer) {
 			os.Exit(1)
 		}
 	}
+}
+
+func contains(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
