@@ -40,7 +40,9 @@ func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool) RemoteRe
 			if len(stdout) == 0 {
 				fmt.Println("Stdout response is empty for remote command.")
 			} else {
-				fmt.Println(stdout)
+				if printStdOut {
+					fmt.Println(stdout)
+				}
 			}
 			if len(stderr) > 0 {
 				fmt.Println("Error during gateway ssh command:")
