@@ -33,6 +33,7 @@ func CreateFilter(clusterFilter string, serviceFilter string, hostFilter string,
 func (c CMServer) GetFilteredHosts(filter Filter) map[string]bool {
 	finalHosts := make(map[string]bool)
 	hosts := make(map[string]bool) // use boolean map as a set
+	// TODO: filter on services and clusters
 	if filter.Server {
 		hosts[c.Hostname] = true
 		finalHosts[c.Hostname] = true

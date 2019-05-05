@@ -80,7 +80,7 @@ func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]
 		ssh := createSshConfig(connectionProfile, host, gatewayHost)
 		go func(ssh *easyssh.MakeConfig, command string, host string, response map[string]RemoteResponse) {
 			defer wg.Done()
-			stdout, stderr, done, err := ssh.Run(command, 60)
+			stdout, stderr, done, err := ssh.Run(command)
 			// Handle errors
 			msgHeader := fmt.Sprintf("%v (done: %v) - output:", host, done)
 			fmt.Println(msgHeader)

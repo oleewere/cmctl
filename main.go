@@ -590,6 +590,30 @@ func main() {
 		},
 	}
 
+	execCommand := cli.Command{
+		Name:  "exec",
+		Usage: "Execute commands on all (or specific) hosts",
+		Action: func(c *cli.Context) error {
+			cmServer := cm.GetActiveCM()
+			validateActiveCM(cmServer)
+			args := c.Args()
+			command := ""
+			for _, arg := range args {
+				command += arg
+			}
+			filter := cm.CreateFilter(c.String("clusters"), c.String("services"), c.String("hosts"), c.Bool("server"))
+			hosts := cmServer.GetFilteredHosts(filter)
+			cmServer.RunRemoteHostCommand(command, hosts, filter.Server)
+			return nil
+		},
+		Flags: []cli.Flag{
+			cli.BoolFlag{Name: "server", Usage: "Filter on CM server"},
+			cli.StringFlag{Name: "clusters, c", Usage: "Filter on clusters (comma separated)"},
+			cli.StringFlag{Name: "services, s", Usage: "Filter on services (comma separated)"},
+			cli.StringFlag{Name: "hosts", Usage: "Filter on hosts (comma separated)"},
+		},
+	}
+
 	app.Commands = append(app.Commands, registryCommand)
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, attachCommand)
@@ -597,6 +621,7 @@ func main() {
 	app.Commands = append(app.Commands, hostsCommand)
 	app.Commands = append(app.Commands, serviesCommand)
 	app.Commands = append(app.Commands, rolesCommand)
+	app.Commands = append(app.Commands, execCommand)
 
 	err := app.Run(os.Args)
 	if err != nil {
