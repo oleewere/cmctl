@@ -56,6 +56,39 @@ func (c CMItems) ConvertRolesResponse(cluster string, service string) []Role {
 	return roles
 }
 
+// ConvertUsersResponse convert items response to Users response
+func (c CMItems) ConvertUsersResponse() []User {
+	users := []User{}
+	for _, item := range c.Items {
+		users = createUserType(item, users)
+	}
+	return users
+}
+
+func createUserType(item Item, users []User) []User {
+	user := User{}
+
+	if name, ok := item["name"]; ok {
+		user.Name = name.(string)
+	}
+
+	authRoles := make([]UserAuthRole, 0)
+
+	if authRolesVal, ok := item["authRoles"]; ok {
+		authRolesI := authRolesVal.([]interface{})
+		for _, authRoleItem := range authRolesI {
+			authRoleMap := authRoleItem.(map[string]interface{})
+			if authRoleName, ok := authRoleMap["name"]; ok {
+				authRole := UserAuthRole{Name: authRoleName.(string)}
+				authRoles = append(authRoles, authRole)
+			}
+		}
+	}
+	user.AuthRoles = authRoles
+	users = append(users, user)
+	return users
+}
+
 func createRoleType(item Item, roles []Role, cluster string, service string) []Role {
 	role := Role{}
 

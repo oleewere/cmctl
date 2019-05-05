@@ -86,3 +86,14 @@ type Deployment struct {
 type ServiceRolesMap struct {
 	RolesMap map[string][]Role
 }
+
+// User holds user details
+type User struct {
+	Name      string         `json:"name,omitempty"`
+	AuthRoles []UserAuthRole `json:"authRoles,omitempty"`
+}
+
+// UserAuthRole holds user auth role details
+type UserAuthRole struct {
+	Name string `json:"name,omitempty"`
+}

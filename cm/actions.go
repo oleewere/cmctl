@@ -68,3 +68,17 @@ func (c CMServer) ExportClusterTemplate(cluster string) []byte {
 	request := c.CreateGetRequest(uri)
 	return ProcessRequest(request)
 }
+
+// GetUsers returns a list of the user names configured in the system.
+func (c CMServer) GetUsers() []User {
+	var cmItems CMItems
+	var uri = "users"
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand))
+	} else {
+		request := c.CreateGetRequest(uri)
+		cmItems = ProcessCMItems(request)
+	}
+	return cmItems.ConvertUsersResponse()
+}
