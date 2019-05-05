@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"strconv"
@@ -450,19 +451,68 @@ func main() {
 		},
 	}
 
-	listClustersCommand := cli.Command{
+	clustersCommand := cli.Command{
 		Name:  "clusters",
-		Usage: "Print all registered CM clusters",
-		Action: func(c *cli.Context) error {
-			cmServer := cm.GetActiveCM()
-			validateActiveCM(cmServer)
-			clusters := cmServer.ListClusters()
-			var tableData [][]string
-			for _, cluster := range clusters {
-				tableData = append(tableData, []string{cluster.Name, cluster.DisplayName, cluster.Version, cluster.Type})
-			}
-			printTable("CLUSTERS:", []string{"NAME", "DISPLAY NAME", "VERSION", "TYPE"}, tableData, c)
-			return nil
+		Usage: "Cluster related opterations",
+		Subcommands: []cli.Command{
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "Print all registered CM clusters",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					clusters := cmServer.ListClusters()
+					var tableData [][]string
+					for _, cluster := range clusters {
+						tableData = append(tableData, []string{cluster.Name, cluster.DisplayName, cluster.Version, cluster.Type})
+					}
+					printTable("CLUSTERS:", []string{"NAME", "DISPLAY NAME", "VERSION", "TYPE"}, tableData, c)
+					return nil
+				},
+			},
+			{
+				Name:    "export",
+				Aliases: []string{"x"},
+				Usage:   "Export cluster configuration to a cluster template json",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					var clusterTemplate []byte
+
+					clusters := cmServer.ListClusters()
+					if len(clusters) == 0 {
+						fmt.Println("Not found any cluster resources!")
+						os.Exit(1)
+					}
+					if len(clusters) > 1 && len(c.String("cluster")) == 0 {
+						fmt.Println("Please provide cluster filter!")
+						os.Exit(1)
+					}
+					var clusterFilter string
+					if len(clusters) > 1 {
+						clusterFilter = c.String("cluster")
+					} else {
+						clusterFilter = clusters[0].Name
+					}
+
+					clusterTemplate = cmServer.ExportClusterTemplate(clusterFilter)
+					if len(c.String("file")) > 0 {
+						err := ioutil.WriteFile(c.String("file"), clusterTemplate, 0644)
+						if err != nil {
+							fmt.Println(err)
+							os.Exit(1)
+						}
+						return nil
+					}
+					printJson(clusterTemplate)
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "cluster, c", Usage: "Cluster name for the template"},
+					cli.StringFlag{Name: "file, f", Usage: "File output for the generated JSON"},
+				},
+			},
 		},
 	}
 
@@ -523,8 +573,8 @@ func main() {
 					return nil
 				},
 				Flags: []cli.Flag{
-					cli.StringFlag{Name: "clusters", Usage: "Cluster filter for roles"},
-					cli.StringFlag{Name: "services", Usage: "Service filter for roles"},
+					cli.StringFlag{Name: "clusters, c", Usage: "Cluster filter for roles"},
+					cli.StringFlag{Name: "services, s", Usage: "Service filter for roles"},
 				},
 			},
 		},
@@ -540,7 +590,7 @@ func main() {
 	app.Commands = append(app.Commands, showCommand)
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, attachCommand)
-	app.Commands = append(app.Commands, listClustersCommand)
+	app.Commands = append(app.Commands, clustersCommand)
 	app.Commands = append(app.Commands, listHostsCommand)
 	app.Commands = append(app.Commands, serviesCommand)
 	app.Commands = append(app.Commands, rolesCommand)

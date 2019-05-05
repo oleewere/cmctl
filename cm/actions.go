@@ -57,3 +57,15 @@ func (c CMServer) GetDeployment() Deployment {
 	}
 	return ConvertDeploymentResponse(deploymentMap)
 }
+
+// ExportClusterTemplate exporting template for a specific cluster
+func (c CMServer) ExportClusterTemplate(cluster string) []byte {
+	var uri = fmt.Sprintf("clusters/%v/export", cluster)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		return []byte(c.RunGatewayCMCommand(curlCommand).StdOut)
+	} else {
+		request := c.CreateGetRequest(uri)
+		return ProcessRequest(request)
+	}
+}
