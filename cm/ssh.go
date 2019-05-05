@@ -17,6 +17,7 @@ type RemoteResponse struct {
 	Done   bool
 }
 
+// RunGatewayCMCommand run command on CM CB gateway
 func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool) RemoteResponse {
 	connectionProfileId := c.ConnectionProfile
 	if len(connectionProfileId) == 0 {

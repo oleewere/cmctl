@@ -137,10 +137,12 @@ func ProcessRequest(request *http.Request) []byte {
 	return bodyBytes
 }
 
+// CreateGatewayCurlGetCommand generate a curl GET command for gateway usage
 func (c CMServer) CreateGatewayCurlGetCommand(uri string) string {
 	return createGatewayCurlCommand(c, uri, "GET")
 }
 
+// CreateGatewayCurlPostCommand generate a curl POST command for gateway usage
 func (c CMServer) CreateGatewayCurlPostCommand(uri string) string {
 	return createGatewayCurlCommand(c, uri, "POST")
 }
