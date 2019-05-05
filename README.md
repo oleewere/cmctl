@@ -18,13 +18,13 @@ brew install cmctl
 
 Using wget:
 ```bash
-CMCTL_VERSION=0.1.0
+CMCTL_VERSION=
 wget -qO- "https://github.com/oleewere/cmctl/releases/download/v${CMCTL_VERSION}/cmctl_${CMCTL_VERSION}_linux_64-bit.tar.gz" | tar -C /usr/bin -zxv cmctl
 ```
 
 Using curl:
 ```bash
-CMCTL_VERSION=0.1.0
+CMCTL_VERSION=
 curl -L -s "https://github.com/oleewere/cmctl/releases/download/v${CMCTL_VERSION}/cmctl_${CMCTL_VERSION}_linux_64-bit.tar.gz" | tar -C /usr/bin -xzv cmctl
 ```
 
