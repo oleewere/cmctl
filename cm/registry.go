@@ -158,7 +158,7 @@ func DeRegisterCMEntry(id string) {
 			}
 		}
 	}
-	WriteCMServerEntries(cmServers)
+	WriteCMServerEntries(newCmServers)
 }
 
 // DeRegisterConnectionProfile remove a connection profile by id
