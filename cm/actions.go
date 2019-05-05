@@ -64,8 +64,7 @@ func (c CMServer) ExportClusterTemplate(cluster string) []byte {
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
 		return []byte(c.RunGatewayCMCommand(curlCommand).StdOut)
-	} else {
-		request := c.CreateGetRequest(uri)
-		return ProcessRequest(request)
 	}
+	request := c.CreateGetRequest(uri)
+	return ProcessRequest(request)
 }
