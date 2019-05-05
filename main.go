@@ -285,7 +285,7 @@ func main() {
 
 	serviesCommand := cli.Command{
 		Name:  "services",
-		Usage: "Service related commands",
+		Usage: "Service related operations",
 		Subcommands: []cli.Command{
 			{
 				Name:    "list",
@@ -544,7 +544,7 @@ func main() {
 
 	rolesCommand := cli.Command{
 		Name:  "roles",
-		Usage: "Role related commands",
+		Usage: "Role related opreations",
 		Subcommands: []cli.Command{
 			{
 				Name:    "list",
