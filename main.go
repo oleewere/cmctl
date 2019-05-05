@@ -318,7 +318,7 @@ func main() {
 
 	profileCommand := cli.Command{
 		Name:  "profiles",
-		Usage: "Connection profiles related commands",
+		Usage: "Connection profiles related opreations",
 		Subcommands: []cli.Command{
 			{
 				Name:    "create",
@@ -516,19 +516,26 @@ func main() {
 		},
 	}
 
-	listHostsCommand := cli.Command{
+	hostsCommand := cli.Command{
 		Name:  "hosts",
-		Usage: "Print all registered CM hosts",
-		Action: func(c *cli.Context) error {
-			cmServer := cm.GetActiveCM()
-			validateActiveCM(cmServer)
-			hosts := cmServer.ListHosts()
-			var tableData [][]string
-			for _, host := range hosts {
-				tableData = append(tableData, []string{host.HostName, host.IPAddress, host.ClusterName, host.CommissionState, host.RackID})
-			}
-			printTable("HOSTS:", []string{"HOSTNAME", "IP", "CLUSTER", "STATE", "RACK ID"}, tableData, c)
-			return nil
+		Usage: "Hosts resource related operations",
+		Subcommands: []cli.Command{
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "Print all registered CM hosts",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					hosts := cmServer.ListHosts()
+					var tableData [][]string
+					for _, host := range hosts {
+						tableData = append(tableData, []string{host.HostName, host.IPAddress, host.ClusterName, host.CommissionState, host.RackID})
+					}
+					printTable("HOSTS:", []string{"HOSTNAME", "IP", "CLUSTER", "STATE", "RACK ID"}, tableData, c)
+					return nil
+				},
+			},
 		},
 	}
 
@@ -591,7 +598,7 @@ func main() {
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, attachCommand)
 	app.Commands = append(app.Commands, clustersCommand)
-	app.Commands = append(app.Commands, listHostsCommand)
+	app.Commands = append(app.Commands, hostsCommand)
 	app.Commands = append(app.Commands, serviesCommand)
 	app.Commands = append(app.Commands, rolesCommand)
 
