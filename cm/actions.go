@@ -8,7 +8,7 @@ func (c CMServer) ListClusters() []Cluster {
 	var uri = "clusters"
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
-		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false))
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
 	} else {
 		request := c.CreateGetRequest(uri)
 		cmItems = ProcessCMItems(request)
@@ -22,7 +22,7 @@ func (c CMServer) ListHosts() []Host {
 	var uri = "hosts"
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
-		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false))
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
 	} else {
 		request := c.CreateGetRequest(uri)
 		cmItems = ProcessCMItems(request)
@@ -36,7 +36,7 @@ func (c CMServer) ListServices(cluster string) []Service {
 	var uri = fmt.Sprintf("clusters/%v/services", cluster)
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
-		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false))
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
 	} else {
 		request := c.CreateGetRequest(uri)
 		cmItems = ProcessCMItems(request)
@@ -50,7 +50,7 @@ func (c CMServer) GetDeployment() Deployment {
 	var uri = fmt.Sprintf("cm/deployment")
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
-		deploymentMap = ProcessAsMapFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false))
+		deploymentMap = ProcessAsMapFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
 	} else {
 		request := c.CreateGetRequest(uri)
 		deploymentMap = ProcessAsMap(request)
@@ -63,7 +63,7 @@ func (c CMServer) ExportClusterTemplate(cluster string) []byte {
 	var uri = fmt.Sprintf("clusters/%v/export", cluster)
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
-		return []byte(c.RunGatewayCMCommand(curlCommand, false).StdOut)
+		return []byte(c.RunGatewayCMCommand(curlCommand, false, true).StdOut)
 	}
 	request := c.CreateGetRequest(uri)
 	return ProcessRequest(request)
@@ -75,7 +75,7 @@ func (c CMServer) GetUsers() []User {
 	var uri = "users"
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
-		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false))
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
 	} else {
 		request := c.CreateGetRequest(uri)
 		cmItems = ProcessCMItems(request)

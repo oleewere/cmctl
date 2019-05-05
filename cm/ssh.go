@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,7 +19,7 @@ type RemoteResponse struct {
 }
 
 // RunGatewayCMCommand run command on CM CB gateway
-func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool) RemoteResponse {
+func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool, printEmptyResponse bool) RemoteResponse {
 	connectionProfileId := c.ConnectionProfile
 	if len(connectionProfileId) == 0 {
 		fmt.Println("No connection profile is attached for the active ambari server entry!")
@@ -37,10 +38,10 @@ func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool) RemoteRe
 		if err != nil {
 			panic("Can't run remote command: " + err.Error())
 		} else {
-			if len(stdout) == 0 {
+			if len(stdout) == 0 && printEmptyResponse {
 				fmt.Println("Stdout response is empty for remote command.")
 			} else {
-				if printStdOut {
+				if printStdOut && len(strings.TrimSpace(stdout)) > 0 {
 					fmt.Println(stdout)
 				}
 			}
@@ -58,6 +59,33 @@ func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool) RemoteRe
 		response = respVal
 	}
 	return response
+}
+
+// CopyToCMGateway copy local file to gateway host
+func (c CMServer) CopyToCMGateway(source string, dest string) {
+	connectionProfileId := c.ConnectionProfile
+	if len(connectionProfileId) == 0 {
+		fmt.Println("No connection profile is attached for the active ambari server entry!")
+		os.Exit(1)
+	}
+	connectionProfile := GetConnectionProfileById(connectionProfileId)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	ssh := createSshConfig(connectionProfile, c.Hostname, "")
+	go func(ssh *easyssh.MakeConfig, source string, dest string, host string) {
+		defer wg.Done()
+		err := ssh.Scp(source, dest)
+		// Handle errors
+		if err != nil {
+			errMsg := fmt.Sprintf("Can't run remote command on host '%v (scp %v to %v)", host, source, dest)
+			fmt.Println(errMsg)
+		} else {
+			succMsg := fmt.Sprintf("Copying to remote host '%v' is successful. (from - %v, to %v)", host, source, dest)
+			fmt.Println(succMsg)
+		}
+	}(ssh, source, dest, c.Hostname)
+	wg.Wait()
 }
 
 // RunRemoteHostCommand executes bash commands on CM hosts

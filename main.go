@@ -665,8 +665,18 @@ func main() {
 						fmt.Println("Cannot run salt commands as CM Server is not CB managed!")
 						os.Exit(1)
 					}
-					fmt.Println("TODO: sync salt resources ...")
+					if len(c.String("source")) == 0 {
+						fmt.Println("The 'source' paramter is required for sync salt scripts!")
+						os.Exit(1)
+					}
+					cmServer.SyncSaltScripts(c.String("source"), c.String("target"), c.String("filter"), c.Bool("clear"))
 					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "source, s", Usage: "Source path for the local salt script folder to sync"},
+					cli.StringFlag{Name: "target, t", Usage: "Target remote path for the salt scripts (default: /srv)"},
+					cli.StringFlag{Name: "filter, f", Usage: "Filter to use only second level folders for uploading (e.g.: pillar)"},
+					cli.BoolFlag{Name: "clear", Usage: "Delete salt backup(s) from the gateway"},
 				},
 			},
 		},
