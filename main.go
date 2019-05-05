@@ -626,6 +626,52 @@ func main() {
 		},
 	}
 
+	saltCommand := cli.Command{
+		Name:  "salt",
+		Usage: "Execute salt commands on the CB gateway",
+		Subcommands: []cli.Command{
+			{
+				Name:    "exec",
+				Aliases: []string{"x"},
+				Usage:   "Execute salt commands on the CB gateway",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					if !cmServer.UseGateway {
+						fmt.Println("Cannot run salt commands as CM Server is not CB managed!")
+						os.Exit(1)
+					}
+					command := c.String("command")
+					if len(command) == 0 {
+						fmt.Println("Command paramter is missing! (use 'command' or 'c')")
+						os.Exit(1)
+					}
+					cmServer.ExecuteSaltCommand(command, c.String("prefix"), c.String("binary"))
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "command, c", Usage: "Command to execute on the minions"},
+					cli.StringFlag{Name: "binary, b", Usage: "Salt binary to use (default: salt)"},
+					cli.StringFlag{Name: "prefix, p", Usage: "Salt binary prefix path (default: /opt/salt_*/bin)"},
+				},
+			},
+			{
+				Name:  "sync",
+				Usage: "Synchronize salt resources from CB source",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					if !cmServer.UseGateway {
+						fmt.Println("Cannot run salt commands as CM Server is not CB managed!")
+						os.Exit(1)
+					}
+					fmt.Println("TODO: sync salt resources ...")
+					return nil
+				},
+			},
+		},
+	}
+
 	execCommand := cli.Command{
 		Name:  "exec",
 		Usage: "Execute commands on all (or specific) hosts",
@@ -658,6 +704,7 @@ func main() {
 	app.Commands = append(app.Commands, serviesCommand)
 	app.Commands = append(app.Commands, rolesCommand)
 	app.Commands = append(app.Commands, usersCommand)
+	app.Commands = append(app.Commands, saltCommand)
 	app.Commands = append(app.Commands, execCommand)
 
 	err := app.Run(os.Args)

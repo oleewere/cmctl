@@ -17,7 +17,7 @@ type RemoteResponse struct {
 	Done   bool
 }
 
-func (c CMServer) RunGatewayCMCommand(command string) RemoteResponse {
+func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool) RemoteResponse {
 	connectionProfileId := c.ConnectionProfile
 	if len(connectionProfileId) == 0 {
 		fmt.Println("No connection profile is attached for the active ambari server entry!")
@@ -38,6 +38,8 @@ func (c CMServer) RunGatewayCMCommand(command string) RemoteResponse {
 		} else {
 			if len(stdout) == 0 {
 				fmt.Println("Stdout response is emtpy for remote command.")
+			} else {
+				fmt.Println(stdout)
 			}
 			if len(stderr) > 0 {
 				fmt.Println("Error during gateway ssh command:")
