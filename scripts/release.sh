@@ -103,7 +103,7 @@ function update_readme_version() {
   local next_release="$1"
   local readme_md_location="$CMCTL_ROOT_DIR/README.md"
   local version_number=$(get_version_number $next_release)
-  sed -i.bak "s/CMCTL_VERSION=[[:digit:]]\.[[:digit:]]\.[[:digit:]]/CMCTL_VERSION=${new_version}/" "$readme_md_location"
+  sed -i.bak "s/CMCTL_VERSION=[[:digit:]]\.[[:digit:]]\.[[:digit:]]/CMCTL_VERSION=${version_number}/" "$readme_md_location"
   rm "$readme_md_location.bak"
   git add "$readme_md_location"
   git commit -m "Update README.md (for release version: $next_release)"
