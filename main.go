@@ -41,8 +41,8 @@ func main() {
 
 	app.Commands = []cli.Command{}
 
-	registryCommand := cli.Command{
-		Name:  "registry",
+	serversCommand := cli.Command{
+		Name:  "servers",
 		Usage: "CM server registry DB related operations",
 		Subcommands: []cli.Command{
 			{
@@ -50,7 +50,7 @@ func main() {
 				Usage: "Initialize CM server database",
 				Action: func(c *cli.Context) error {
 					cm.CreateCMRegistryDb()
-					fmt.Println("CM registry DB has been initialized.")
+					fmt.Println("CM servers registry DB has been initialized.")
 					return nil
 				},
 			},
@@ -190,21 +190,21 @@ func main() {
 				Usage: "De-register an existing CM server entry",
 				Action: func(c *cli.Context) error {
 					if len(c.Args()) == 0 {
-						fmt.Println("Provide a registry name argument for use command. e.g.: delete vagrant")
+						fmt.Println("Provide a server name argument for use command. e.g.: delete vagrant")
 						os.Exit(1)
 					}
 					name := c.Args().First()
 					cmEntryId := cm.GetCMEntryId(name)
 					if len(cmEntryId) == 0 {
-						fmt.Println("CM registry entry does not exist with id " + name)
+						fmt.Println("CM server entry does not exist with id " + name)
 						os.Exit(1)
 					}
 					cm.DeRegisterCMEntry(name)
-					fmt.Println("CM registry de-registered with id: " + name)
+					fmt.Println("CM server de-registered with id: " + name)
 					return nil
 				},
 				Flags: []cli.Flag{
-					cli.StringFlag{Name: "name", Usage: "name of the CM registry entry"},
+					cli.StringFlag{Name: "name", Usage: "name of the CM server entry"},
 				},
 			},
 			{
@@ -227,7 +227,7 @@ func main() {
 					return nil
 				},
 				Flags: []cli.Flag{
-					cli.StringFlag{Name: "name", Usage: "name of the CM registry entry"},
+					cli.StringFlag{Name: "name", Usage: "name of the CM server entry"},
 				},
 			},
 			{
@@ -708,7 +708,7 @@ func main() {
 		},
 	}
 
-	app.Commands = append(app.Commands, registryCommand)
+	app.Commands = append(app.Commands, serversCommand)
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, attachCommand)
 	app.Commands = append(app.Commands, clustersCommand)
@@ -760,7 +760,7 @@ func formatJson(b []byte) *bytes.Buffer {
 
 func validateActiveCM(cmServer cm.CMServer) {
 	if len(cmServer.Name) == 0 {
-		fmt.Println("No active CM server selected. (see 'registry use' command)")
+		fmt.Println("No active CM server selected. (see 'servers use' command)")
 		os.Exit(1)
 	} else {
 		if cmServer.UseGateway && len(cmServer.ConnectionProfile) == 0 {

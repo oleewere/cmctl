@@ -97,7 +97,7 @@ func GetConnectionProfileEntryId(id string) string {
 func RegisterNewCMEntry(id string, hostname string, port int, protocol string, username string, password string, useGateway bool, apiVersion int) {
 	checkId := GetCMEntryId(id)
 	if len(checkId) > 0 {
-		alreadyExistMsg := fmt.Sprintf("Registry with id '%s' is already defined as a registry entry", checkId)
+		alreadyExistMsg := fmt.Sprintf("CM Server with id '%s' is already defined in CM server registry DB.", checkId)
 		fmt.Println(alreadyExistMsg)
 		os.Exit(1)
 	}
@@ -112,7 +112,7 @@ func RegisterNewCMEntry(id string, hostname string, port int, protocol string, u
 func UpdateCMEntry(id string, hostname string, port int, protocol string, username string, password string, useGateway bool, apiVersion int, connectionProfile string) {
 	checkId := GetCMEntryId(id)
 	if len(checkId) == 0 {
-		notExistMsg := fmt.Sprintf("Registry with id '%s' does not exist in CM server registry DB.", checkId)
+		notExistMsg := fmt.Sprintf("CM Server with id '%s' does not exist in CM server registry DB.", checkId)
 		fmt.Println(notExistMsg)
 		os.Exit(1)
 	}
