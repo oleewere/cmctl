@@ -186,6 +186,10 @@ func createHostsType(item Item, hosts []Host) []Host {
 	if rackID, ok := item["rackId"]; ok {
 		host.RackID = rackID.(string)
 	}
+	if totalMemVal, ok := item["totalPhysMemBytes"]; ok {
+		totalMemBytes := int64(totalMemVal.(float64))
+		host.TotalMemory = ByteCountDecimal(totalMemBytes)
+	}
 	if clusterRefVal, ok := item["clusterRef"]; ok {
 		clusterRef := clusterRefVal.(map[string]interface{})
 		if clusterNameVal, ok := clusterRef["clusterName"]; ok {

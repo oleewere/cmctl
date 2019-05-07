@@ -533,9 +533,9 @@ func main() {
 					hosts := cmServer.ListHosts()
 					var tableData [][]string
 					for _, host := range hosts {
-						tableData = append(tableData, []string{host.HostName, host.IPAddress, host.ClusterName, host.CommissionState, host.RackID})
+						tableData = append(tableData, []string{host.HostName, host.IPAddress, host.ClusterName, host.RackID, host.TotalMemory})
 					}
-					printTable("HOSTS:", []string{"HOSTNAME", "IP", "CLUSTER", "STATE", "RACK ID"}, tableData, c)
+					printTable("HOSTS:", []string{"HOSTNAME", "IP", "CLUSTER", "RACK ID", "MEMORY"}, tableData, c)
 					return nil
 				},
 			},

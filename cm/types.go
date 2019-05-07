@@ -49,6 +49,7 @@ type Host struct {
 	RackID             string `json:"rackId,omitempty"`
 	ClusterName        string `json:"clusterName,omitempty"`
 	ClusterDisplayName string `json:"clusterDisplayName,omitempty"`
+	TotalMemory        string `json:"totalPhysMemBytes,omitempty"`
 }
 
 // Service holds service details
