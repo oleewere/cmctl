@@ -626,6 +626,57 @@ func main() {
 		},
 	}
 
+	inventoryCommand := cli.Command{
+		Name:  "inventory",
+		Usage: "Hosts inventory (ansible compatible) related operations",
+		Subcommands: []cli.Command{
+			{
+				Name:    "generate",
+				Aliases: []string{"g"},
+				Usage:   "Generate host inventory files",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					outputDir := c.String("directory")
+					outputFile := c.String("output")
+					clusterFilter := c.String("cluster")
+					serverHostname := c.String("server-hostname")
+					if len(serverHostname) == 0 {
+						serverHostname = cmServer.Hostname
+					}
+					if len(outputDir) == 0 && len(outputFile) == 0 {
+						currentDir, err := os.Getwd()
+						if err != nil {
+							fmt.Println(err)
+							os.Exit(1)
+						}
+						outputDir = currentDir
+						fmt.Println("Output file or directory is not provided. Inventory files will be generated in the current folder.")
+					}
+					if len(outputDir) > 0 && !cm.Exists(outputDir) {
+						fmt.Println(fmt.Sprintf("Output directory does not exist: '%v'", outputDir))
+						os.Exit(1)
+					}
+					clusters := cmServer.ListClusters()
+					if len(outputFile) > 0 && len(clusterFilter) == 0 && len(clusters) > 1 {
+						fmt.Println("Cluster filter is required! (multiple clusters found)")
+					}
+					if len(clusters) == 1 && len(clusterFilter) == 0 {
+						clusterFilter = clusters[0].Name
+					}
+					cmServer.CreateInventoryFiles(outputDir, outputFile, clusterFilter, serverHostname)
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "directory, d", Usage: "Output directory for inventory files"},
+					cli.StringFlag{Name: "output, o", Usage: "Output file for 1 inventory file"},
+					cli.StringFlag{Name: "cluster, c", Usage: "Cluster filter (required for 'output' option)"},
+					cli.StringFlag{Name: "server-hostname, s", Usage: "Override CM server hostname"},
+				},
+			},
+		},
+	}
+
 	saltCommand := cli.Command{
 		Name:  "salt",
 		Usage: "Execute salt commands on the CB gateway",
@@ -716,6 +767,7 @@ func main() {
 	app.Commands = append(app.Commands, serviesCommand)
 	app.Commands = append(app.Commands, rolesCommand)
 	app.Commands = append(app.Commands, usersCommand)
+	app.Commands = append(app.Commands, inventoryCommand)
 	app.Commands = append(app.Commands, saltCommand)
 	app.Commands = append(app.Commands, execCommand)
 

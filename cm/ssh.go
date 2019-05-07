@@ -23,7 +23,7 @@ type RemoteResponse struct {
 func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool, printEmptyResponse bool) RemoteResponse {
 	connectionProfileId := c.ConnectionProfile
 	if len(connectionProfileId) == 0 {
-		fmt.Println("No connection profile is attached for the active ambari server entry!")
+		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
 	connectionProfile := GetConnectionProfileById(connectionProfileId)
@@ -93,7 +93,7 @@ func (c CMServer) CopyToCMGateway(source string, dest string) {
 func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]bool, skipJump bool) map[string]RemoteResponse {
 	connectionProfileId := c.ConnectionProfile
 	if len(connectionProfileId) == 0 {
-		fmt.Println("No connection profile is attached for the active ambari server entry!")
+		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
 	connectionProfile := GetConnectionProfileById(connectionProfileId)

@@ -1,6 +1,9 @@
 package cm
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 // SliceContains check that a string slice contains an element or not
 func SliceContains(a string, list []string) bool {
@@ -24,4 +27,14 @@ func ByteCountDecimal(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "kMGTPE"[exp])
+}
+
+// Exists reports whether the named file or directory exists.
+func Exists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }

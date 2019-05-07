@@ -19,13 +19,13 @@ const (
 func CreateCMRegistryDb() {
 	cmServerJsonFile := getJsonDbFile(cmServerJsonFileName)
 	connectionProfileJsonFile := getJsonDbFile(connectionProfilesJsonFileName)
-	if !exists(cmServerJsonFile) {
+	if !Exists(cmServerJsonFile) {
 		cmServerRegistries := make([]CMServer, 0)
 		cmServerJson, _ := json.Marshal(cmServerRegistries)
 		err := ioutil.WriteFile(cmServerJsonFile, cmServerJson, 0644)
 		checkErr(err)
 	}
-	if !exists(connectionProfileJsonFile) {
+	if !Exists(connectionProfileJsonFile) {
 		connectionProfiles := make([]ConnectionProfile, 0)
 		connectionProfilesJson, _ := json.Marshal(connectionProfiles)
 		err := ioutil.WriteFile(connectionProfileJsonFile, connectionProfilesJson, 0644)
@@ -300,16 +300,6 @@ func getJsonDbFile(file string) string {
 		os.Mkdir(cmManagerFolder, os.ModePerm)
 	}
 	return path.Join(cmManagerFolder, file)
-}
-
-// Exists reports whether the named file or directory exists.
-func exists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
 }
 
 func checkErr(err error) {
