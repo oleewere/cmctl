@@ -52,7 +52,7 @@ You can create multiple CM server entries. The tool will always use that one, wh
 In order to use commands through CB gateway or just use `exec` or `salt` commands, it is required to set up an SSH connection profile:
 
 ```bash
-cmctl profile create
+cmctl profiles create
 ```
 
 Then you can attach that profile to your (active_ CM server by `attach` command:
