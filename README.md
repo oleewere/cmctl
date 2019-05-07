@@ -76,3 +76,20 @@ Against CB managed CM servers, you can also use `salt` (in order to avoid gatewa
 ```bash
 cmctl salt exec -c "echo hello"
 ```
+
+#### Generate Ansible host inventory file(s)
+
+If you prefer to use [ansible](https://github.com/ansible/ansible), it is possible to generate ansible compatible host inventory files:
+
+```bash
+cmctl inventory generate -d /my/output/directory
+# or cmctl inventory generate -o hosts -c mycluster
+```
+
+It will generate inventory files per cluster. (`<clustername>.ini` format, can be overriden by `-o` flag, but it requires to use cluster filter if CM registered multiple clusters)
+
+Then you can use the generated file(s) as an ansible inventory file:
+
+```bash
+ansible -i my-generated-inventory server -m shell -a "echo hello"
+```
