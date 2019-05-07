@@ -666,7 +666,7 @@ func main() {
 						os.Exit(1)
 					}
 					if len(c.String("source")) == 0 {
-						fmt.Println("The 'source' paramter is required for sync salt scripts!")
+						fmt.Println("The 'source' parameter is required for sync salt scripts!")
 						os.Exit(1)
 					}
 					cmServer.SyncSaltScripts(c.String("source"), c.String("target"), c.String("filter"), c.Bool("clear"))
