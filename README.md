@@ -93,3 +93,6 @@ Then you can use the generated file(s) as an ansible inventory file:
 ```bash
 ansible -i my-generated-inventory server -m shell -a "echo hello"
 ```
+
+### License
+GNU General Public License v3.0
