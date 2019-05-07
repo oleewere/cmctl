@@ -103,6 +103,12 @@ type UserAuthRole struct {
 type Inventory struct {
 	ClusterName         string
 	Hosts               []Host
-	ServiceRoleHostsMap map[string]map[string][]string
+	ServiceRoleHostsMap map[string]map[string][]HostRoleNamePair
 	ServiceHostsMap     map[string][]string
+}
+
+// HostRoleNamePair holds host name and role name for inventory resource
+type HostRoleNamePair struct {
+	HostName string
+	RoleName string
 }

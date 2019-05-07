@@ -32,7 +32,7 @@ func (c CMServer) GetFilteredHosts(filter Filter) map[string]bool {
 			for role, rolesHosts := range rolesHostsMap {
 				if SliceContains(role, filter.Roles) {
 					for _, host := range rolesHosts {
-						hosts[host] = true
+						hosts[host.HostName] = true
 					}
 				}
 			}

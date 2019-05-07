@@ -24,20 +24,22 @@ func CreateInventoriesFromDeploymentsAndHosts(deployment Deployment, agentHosts 
 func CreateInventory(clusterName string, serviceRoleMap ServiceRolesMap, deployment Deployment, agentHosts []Host) Inventory {
 	inventory := Inventory{}
 	serviceHostsMap := make(map[string][]string)
-	serviceRolesHostsMap := make(map[string]map[string][]string)
+	serviceRolesHostsMap := make(map[string]map[string][]HostRoleNamePair)
 
 	for serviceKey, roles := range serviceRoleMap.RolesMap {
-		rolesHostsMap := make(map[string][]string)
+		rolesHostsPairMap := make(map[string][]HostRoleNamePair)
 		for _, role := range roles {
-			if roleHosts, ok := rolesHostsMap[role.Type]; ok {
-				if !SliceContains(role.HostName, roleHosts) {
-					roleHosts = append(roleHosts, role.HostName)
-					rolesHostsMap[role.Type] = roleHosts
+			if roleHostsPairs, ok := rolesHostsPairMap[role.Type]; ok {
+				if !containsRoleHosts(role.HostName, roleHostsPairs) {
+					hostRolePair := HostRoleNamePair{HostName: role.HostName, RoleName: role.Name}
+					roleHostsPairs = append(roleHostsPairs, hostRolePair)
+					rolesHostsPairMap[role.Type] = roleHostsPairs
 				}
 			} else {
-				roleHosts = make([]string, 0)
-				roleHosts = append(roleHosts, role.HostName)
-				rolesHostsMap[role.Type] = roleHosts
+				roleHostsPairs = make([]HostRoleNamePair, 0)
+				hostRolePair := HostRoleNamePair{HostName: role.HostName, RoleName: role.Name}
+				roleHostsPairs = append(roleHostsPairs, hostRolePair)
+				rolesHostsPairMap[role.Type] = roleHostsPairs
 			}
 			if serviceHosts, ok := serviceHostsMap[serviceKey]; ok {
 				if !SliceContains(role.HostName, serviceHosts) {
@@ -50,7 +52,7 @@ func CreateInventory(clusterName string, serviceRoleMap ServiceRolesMap, deploym
 				serviceHostsMap[serviceKey] = serviceHosts
 			}
 		}
-		serviceRolesHostsMap[serviceKey] = rolesHostsMap
+		serviceRolesHostsMap[serviceKey] = rolesHostsPairMap
 	}
 
 	inventory.ClusterName = clusterName
@@ -116,13 +118,20 @@ func (c CMServer) CreateInventoryFiles(targetDir string, outputFile string, clus
 			}
 
 			for service, roleHostsMap := range inventory.ServiceRoleHostsMap {
-				for role, hosts := range roleHostsMap {
-					roleSection := fmt.Sprintf("role.%v.%v", service, strings.ToLower(role))
+				for roleType, hostRolePairs := range roleHostsMap {
+					roleSection := fmt.Sprintf("role.%v.%v", service, strings.ToLower(roleType))
 					roleRawBody := ""
-					for _, host := range hosts {
-						roleRawBody += (host + "\n")
+					for _, hostRolePair := range hostRolePairs {
+						roleRawBody += (hostRolePair.HostName + "\n")
 					}
 					cfg.NewRawSection(roleSection, roleRawBody)
+					roleVarsSection := fmt.Sprintf("%v:vars", roleSection)
+					roleVarsRawBody := ""
+					for _, hostRolePair := range hostRolePairs {
+						roleNameHostPair := fmt.Sprintf("%v=%v\n", hostRolePair.RoleName, hostRolePair.HostName)
+						roleVarsRawBody += roleNameHostPair
+					}
+					cfg.NewRawSection(roleVarsSection, roleVarsRawBody)
 				}
 			}
 
@@ -139,4 +148,14 @@ func (c CMServer) CreateInventoryFiles(targetDir string, outputFile string, clus
 			fmt.Println(fmt.Sprintf("Inventory file '%v' has been created.", iniFileLocation))
 		}
 	}
+}
+
+func containsRoleHosts(host string, roleHostsPairs []HostRoleNamePair) bool {
+	contains := false
+	for _, hostRolePair := range roleHostsPairs {
+		if hostRolePair.HostName == host {
+			return true
+		}
+	}
+	return contains
 }
