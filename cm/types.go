@@ -97,3 +97,11 @@ type User struct {
 type UserAuthRole struct {
 	Name string `json:"name,omitempty"`
 }
+
+// Inventory holds hosts mappings for resources
+type Inventory struct {
+	ClusterName         string
+	Hosts               []Host
+	ServiceRoleHostsMap map[string]map[string][]string
+	ServiceHostsMap     map[string][]string
+}

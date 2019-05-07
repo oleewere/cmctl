@@ -553,17 +553,17 @@ func main() {
 				Action: func(c *cli.Context) error {
 					cmServer := cm.GetActiveCM()
 					validateActiveCM(cmServer)
-					filter := cm.CreateFilter(c.String("clusters"), c.String("services"), "", false)
+					filter := cm.CreateFilter(c.String("clusters"), c.String("services"), "", "", false)
 
 					deployment := cmServer.GetDeployment()
 					clusterServiceRoleMap := deployment.ClusterServiceRoleMap
 					var counter int
 					for cluster, serviceMap := range clusterServiceRoleMap {
-						if len(filter.Clusters) > 0 && !contains(cluster, filter.Clusters) {
+						if len(filter.Clusters) > 0 && !cm.SliceContains(cluster, filter.Clusters) {
 							continue
 						}
 						for service, roles := range serviceMap.RolesMap {
-							if len(filter.Services) > 0 && !contains(service, filter.Services) {
+							if len(filter.Services) > 0 && !cm.SliceContains(service, filter.Services) {
 								continue
 							}
 							var tableData [][]string
@@ -583,8 +583,8 @@ func main() {
 					return nil
 				},
 				Flags: []cli.Flag{
-					cli.StringFlag{Name: "clusters, c", Usage: "Cluster filter for roles"},
-					cli.StringFlag{Name: "services, s", Usage: "Service filter for roles"},
+					cli.StringFlag{Name: "clusters", Usage: "Cluster filter for roles"},
+					cli.StringFlag{Name: "services", Usage: "Service filter for roles"},
 				},
 			},
 		},
@@ -693,7 +693,7 @@ func main() {
 				fmt.Println("Command parameter is missing! (use 'command' or 'c')")
 				os.Exit(1)
 			}
-			filter := cm.CreateFilter(c.String("clusters"), c.String("services"), c.String("hosts"), c.Bool("server"))
+			filter := cm.CreateFilter(c.String("clusters"), c.String("services"), c.String("roles"), c.String("hosts"), c.Bool("server"))
 			hosts := cmServer.GetFilteredHosts(filter)
 			cmServer.RunRemoteHostCommand(command, hosts, filter.Server)
 			return nil
@@ -703,6 +703,7 @@ func main() {
 			cli.BoolFlag{Name: "server", Usage: "Filter on CM server"},
 			cli.StringFlag{Name: "clusters", Usage: "Filter on clusters (comma separated)"},
 			cli.StringFlag{Name: "services", Usage: "Filter on services (comma separated)"},
+			cli.StringFlag{Name: "roles", Usage: "Filter on roles (comma separated)"},
 			cli.StringFlag{Name: "hosts", Usage: "Filter on hosts (comma separated)"},
 		},
 	}
@@ -767,13 +768,4 @@ func validateActiveCM(cmServer cm.CMServer) {
 			os.Exit(1)
 		}
 	}
-}
-
-func contains(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
