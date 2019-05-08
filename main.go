@@ -345,7 +345,7 @@ func main() {
 
 					for _, cluster := range filter.Clusters {
 						for _, service := range filter.Services {
-							cmServer.RunServiceOperation(cluster, service, c.String("command"), c.Bool("verbose"))
+							cmServer.RunServiceOperation(cluster, service, c.String("command"), true)
 						}
 					}
 
@@ -355,7 +355,6 @@ func main() {
 					cli.StringFlag{Name: "command, c", Usage: "Command: start/stop/restart"},
 					cli.StringFlag{Name: "clusters", Usage: "Clusters filter (comma separated)"},
 					cli.StringFlag{Name: "services, s", Usage: "Services filter (comma separated)"},
-					cli.BoolFlag{Name: "verbose, v", Usage: "Print REST API responses"},
 				},
 			},
 		},
@@ -627,6 +626,80 @@ func main() {
 				Flags: []cli.Flag{
 					cli.StringFlag{Name: "clusters", Usage: "Cluster filter for roles"},
 					cli.StringFlag{Name: "services", Usage: "Service filter for roles"},
+				},
+			},
+			{
+				Name:  "run",
+				Usage: "Run operation on role(s) - start / stop / restart / <custom>",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					clusters := cmServer.ListClusters()
+					clustersFilter := c.String("clusters")
+					serviceFilter := c.String("service")
+					rolesFilter := c.String("roles")
+					command := c.String("command")
+					if len(clusters) == 0 {
+						fmt.Println(fmt.Sprintf("Not found any clusters for CM server with id '%v'", cmServer.Name))
+						os.Exit(1)
+					}
+					if len(clusters) > 1 && len(clustersFilter) > 0 {
+						fmt.Println("Parameter 'clusters' is required!")
+						os.Exit(1)
+					}
+					if len(clusters) == 1 {
+						clustersFilter = clusters[0].Name
+					}
+
+					if len(serviceFilter) == 0 {
+						fmt.Println("Parameter 'service' is required!")
+						os.Exit(1)
+					}
+					if len(rolesFilter) == 0 {
+						fmt.Println("Parameter 'roles' is required!")
+						os.Exit(1)
+					}
+					filter := cm.CreateFilter(clustersFilter, serviceFilter, rolesFilter, "", false)
+					if len(filter.Services) > 1 {
+						fmt.Println("Only 1 service can be selected as a filter!")
+						os.Exit(1)
+					}
+					deployment := cmServer.GetDeployment()
+					hosts := cmServer.ListHosts()
+					inventories := cm.CreateInventoriesFromDeploymentsAndHosts(deployment, hosts)
+
+					roleNames := make([]string, 0)
+					for _, inventory := range inventories {
+						invCluster := inventory.ClusterName
+						if !cm.SliceContains(invCluster, filter.Clusters) {
+							fmt.Println(fmt.Sprintf("Cluster with name '%v' is filtered out.", invCluster))
+							continue
+						}
+						if roleHostsPairMap, ok := inventory.ServiceRoleHostsMap[serviceFilter]; ok {
+							for role, roleNameHostsPairs := range roleHostsPairMap {
+								for _, roleNameHostsPair := range roleNameHostsPairs {
+									if cm.SliceContains(role, filter.Roles) {
+										roleNames = append(roleNames, roleNameHostsPair.RoleName)
+									}
+								}
+							}
+						}
+					}
+
+					if len(roleNames) > 0 {
+						cmServer.RunRolesOperation(clustersFilter, serviceFilter, roleNames, command, true)
+					} else {
+						fmt.Println("No roles are selected! (out filtered ?)")
+						os.Exit(1)
+					}
+
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "command, c", Usage: "Command: start/stop/restart"},
+					cli.StringFlag{Name: "clusters", Usage: "Clusters filter (comma separated)"},
+					cli.StringFlag{Name: "service, s", Usage: "Services filter"},
+					cli.StringFlag{Name: "roles, r", Usage: "Roles filter (comma separated)"},
 				},
 			},
 		},

@@ -3,6 +3,7 @@ package cm
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 // ListClusters get all the registered clusters
@@ -91,10 +92,30 @@ func (c CMServer) RunServiceOperation(cluster string, service string, command st
 	var response []byte
 	var uri = fmt.Sprintf("clusters/%v/services/%s/commands/%v", cluster, service, command)
 	if c.UseGateway {
-		curlCommand := c.CreateGatewayCurlPostCommand(uri)
+		curlCommand := c.CreateGatewayCurlPostCommand(uri, "")
 		response = []byte(c.RunGatewayCMCommand(curlCommand, verbose, true).StdOut)
 	} else {
 		request := c.CreatePostRequest(bytes.Buffer{}, uri)
+		response = ProcessRequest(request)
+		if verbose {
+			fmt.Println(string(response))
+		}
+	}
+	return response
+}
+
+// RunRolesOperation run operation on a list of roles for a specific service
+func (c CMServer) RunRolesOperation(cluster string, service string, roleNames []string, command string, verbose bool) []byte {
+	var response []byte
+	var uri = fmt.Sprintf("clusters/%v/services/%s/roleCommands/%v", cluster, service, command)
+	postBody := fmt.Sprintf("{\"items\": [%v]}", strings.Join(AddQutes(roleNames), ","))
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlPostCommand(uri, postBody)
+		response = []byte(c.RunGatewayCMCommand(curlCommand, verbose, true).StdOut)
+	} else {
+		bodyBytesBuffer := bytes.Buffer{}
+		bodyBytesBuffer.WriteString(postBody)
+		request := c.CreatePostRequest(bodyBytesBuffer, uri)
 		response = ProcessRequest(request)
 		if verbose {
 			fmt.Println(string(response))

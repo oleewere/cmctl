@@ -139,14 +139,18 @@ func ProcessRequest(request *http.Request) []byte {
 
 // CreateGatewayCurlGetCommand generate a curl GET command for gateway usage
 func (c CMServer) CreateGatewayCurlGetCommand(uri string) string {
-	return createGatewayCurlCommand(c, uri, "GET")
+	return createGatewayCurlCommand(c, uri, "GET", "")
 }
 
 // CreateGatewayCurlPostCommand generate a curl POST command for gateway usage
-func (c CMServer) CreateGatewayCurlPostCommand(uri string) string {
-	return createGatewayCurlCommand(c, uri, "POST")
+func (c CMServer) CreateGatewayCurlPostCommand(uri string, body string) string {
+	return createGatewayCurlCommand(c, uri, "POST", body)
 }
 
-func createGatewayCurlCommand(c CMServer, uri string, method string) string {
-	return fmt.Sprintf("curl -s -X %v -k -u %v:%v 'http://localhost:7180/api/v%v/%v'", method, c.Username, c.Password, c.ApiVersion, uri)
+func createGatewayCurlCommand(c CMServer, uri string, method string, body string) string {
+	bodyCommand := ""
+	if len(body) > 0 {
+		bodyCommand = fmt.Sprintf(" -H \"Content-Type: application/json\" --data '%v'", body)
+	}
+	return fmt.Sprintf("curl -s -X %v -k -u %v:%v%v 'http://localhost:7180/api/v%v/%v'", method, c.Username, c.Password, bodyCommand, c.ApiVersion, uri)
 }

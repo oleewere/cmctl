@@ -38,3 +38,11 @@ func Exists(name string) bool {
 	}
 	return true
 }
+
+func AddQutes(slice []string) []string {
+	newSlice := make([]string, 0)
+	for _, str := range slice {
+		newSlice = append(newSlice, "\""+str+"\"")
+	}
+	return newSlice
+}
