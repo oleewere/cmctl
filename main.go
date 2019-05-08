@@ -802,7 +802,6 @@ func main() {
 
 	app.Commands = append(app.Commands, serversCommand)
 	app.Commands = append(app.Commands, profileCommand)
-	app.Commands = append(app.Commands, attachCommand)
 	app.Commands = append(app.Commands, clustersCommand)
 	app.Commands = append(app.Commands, hostsCommand)
 	app.Commands = append(app.Commands, serviesCommand)
