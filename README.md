@@ -55,12 +55,12 @@ In order to use commands through CB gateway or just use `exec` or `salt` command
 cmctl profiles create
 ```
 
-Then you can attach that profile to your (active_ CM server by `attach` command:
+Then you can attach that profile to your (active_ CM server by `profiles attach` command:
 
 ```bash
-cmctl attach myprofilename
-# or for a non-active one
-cmctl attach myprofilename mycmentry
+cmctl profiles attach myprofilename
+# or for a non-active CM server
+cmctl profiles attach myprofilename mycmentry
 ```
 
 #### Execute remote commands on hosts

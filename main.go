@@ -425,6 +425,43 @@ func main() {
 				},
 			},
 			{
+				Name:  "attach",
+				Usage: "Attach a profile to a CM server entry",
+				Action: func(c *cli.Context) error {
+					args := c.Args()
+					if len(args) == 0 {
+						fmt.Println("Provide at least 1 argument (<profile>), or 2 (<profile> and <cmEntry>)")
+						os.Exit(1)
+					}
+					profileID := args.Get(0)
+					var cmServer cm.CMServer
+					if len(args) == 1 {
+						cmServer = cm.GetActiveCM()
+						if len(cmServer.Name) == 0 {
+							fmt.Println("No active CM selected")
+							os.Exit(1)
+						}
+					} else {
+						cmServerID := args.Get(1)
+						cm.GetCMById(cmServerID)
+						if len(cmServer.Name) == 0 {
+							fmt.Println("Cannot find specific CM server entry")
+							os.Exit(1)
+						}
+					}
+					profile := cm.GetConnectionProfileById(profileID)
+					if len(profile.Name) == 0 {
+						fmt.Println("Cannot find specific connection profile entry")
+						os.Exit(1)
+					}
+
+					cm.SetProfileIdForCMEntry(cmServer.Name, profile.Name)
+					msg := fmt.Sprintf("Attach profile '%s' to '%s'", profile.Name, cmServer.Name)
+					fmt.Println(msg)
+					return nil
+				},
+			},
+			{
 				Name:    "delete",
 				Aliases: []string{"d"},
 				Usage:   "Delete a connection profile entry by id",
@@ -455,44 +492,6 @@ func main() {
 					return nil
 				},
 			},
-		},
-	}
-
-	attachCommand := cli.Command{
-		Name:  "attach",
-		Usage: "Attach a profile to a CM server entry",
-		Action: func(c *cli.Context) error {
-			args := c.Args()
-			if len(args) == 0 {
-				fmt.Println("Provide at least 1 argument (<profile>), or 2 (<profile> and <cmEntry>)")
-				os.Exit(1)
-			}
-			profileId := args.Get(0)
-			var cmServer cm.CMServer
-			if len(args) == 1 {
-				cmServer = cm.GetActiveCM()
-				if len(cmServer.Name) == 0 {
-					fmt.Println("No active CM selected")
-					os.Exit(1)
-				}
-			} else {
-				cmServerId := args.Get(1)
-				cm.GetCMById(cmServerId)
-				if len(cmServer.Name) == 0 {
-					fmt.Println("Cannot find specific CM server entry")
-					os.Exit(1)
-				}
-			}
-			profile := cm.GetConnectionProfileById(profileId)
-			if len(profile.Name) == 0 {
-				fmt.Println("Cannot find specific connection profile entry")
-				os.Exit(1)
-			}
-
-			cm.SetProfileIdForCMEntry(cmServer.Name, profile.Name)
-			msg := fmt.Sprintf("Attach profile '%s' to '%s'", profile.Name, cmServer.Name)
-			fmt.Println(msg)
-			return nil
 		},
 	}
 
