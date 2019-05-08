@@ -1,6 +1,9 @@
 package cm
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 // ListClusters get all the registered clusters
 func (c CMServer) ListClusters() []Cluster {
@@ -81,4 +84,21 @@ func (c CMServer) GetUsers() []User {
 		cmItems = ProcessCMItems(request)
 	}
 	return cmItems.ConvertUsersResponse()
+}
+
+// RunServiceOperation run a service operation (start / stop / restart)
+func (c CMServer) RunServiceOperation(cluster string, service string, command string, verbose bool) []byte {
+	var response []byte
+	var uri = fmt.Sprintf("clusters/%v/services/%s/commands/%v", cluster, service, command)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlPostCommand(uri)
+		response = []byte(c.RunGatewayCMCommand(curlCommand, verbose, true).StdOut)
+	} else {
+		request := c.CreatePostRequest(bytes.Buffer{}, uri)
+		response = ProcessRequest(request)
+		if verbose {
+			fmt.Println(string(response))
+		}
+	}
+	return response
 }

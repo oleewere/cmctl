@@ -316,6 +316,48 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:  "run",
+				Usage: "Run operation on service(s) - start / stop / restart / <custom>",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					clusters := cmServer.ListClusters()
+					clustersFilter := c.String("clusters")
+					servicesFilter := c.String("services")
+					if len(clusters) == 0 {
+						fmt.Println(fmt.Sprintf("Not found any clusters for CM server with id '%v'", cmServer.Name))
+						os.Exit(1)
+					}
+					if len(clusters) > 1 && len(clustersFilter) > 0 {
+						fmt.Println("Parameter 'clusters' is required!")
+						os.Exit(1)
+					}
+					if len(clusters) == 1 {
+						clustersFilter = clusters[0].Name
+					}
+
+					if len(servicesFilter) == 0 {
+						fmt.Println("Parameter 'services' is required!")
+						os.Exit(1)
+					}
+					filter := cm.CreateFilter(clustersFilter, servicesFilter, "", "", false)
+
+					for _, cluster := range filter.Clusters {
+						for _, service := range filter.Services {
+							cmServer.RunServiceOperation(cluster, service, c.String("command"), c.Bool("verbose"))
+						}
+					}
+
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "command, c", Usage: "Command: start/stop/restart"},
+					cli.StringFlag{Name: "clusters", Usage: "Clusters filter (comma separated)"},
+					cli.StringFlag{Name: "services, s", Usage: "Services filter (comma separated)"},
+					cli.BoolFlag{Name: "verbose, v", Usage: "Print REST API responses"},
+				},
+			},
 		},
 	}
 
