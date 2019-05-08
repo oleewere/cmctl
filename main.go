@@ -425,8 +425,9 @@ func main() {
 				},
 			},
 			{
-				Name:  "attach",
-				Usage: "Attach a profile to a CM server entry",
+				Name:    "attach",
+				Aliases: []string{"a"},
+				Usage:   "Attach a profile to a CM server entry",
 				Action: func(c *cli.Context) error {
 					args := c.Args()
 					if len(args) == 0 {
