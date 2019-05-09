@@ -105,10 +105,16 @@ func (c CMServer) RunServiceOperation(cluster string, service string, command st
 }
 
 // RunRolesOperation run operation on a list of roles for a specific service
-func (c CMServer) RunRolesOperation(cluster string, service string, roleNames []string, command string, verbose bool) []byte {
+func (c CMServer) RunRolesOperation(cluster string, service string, roleNames []string, roleNameFilter string, command string, verbose bool) []byte {
 	var response []byte
 	var uri = fmt.Sprintf("clusters/%v/services/%s/roleCommands/%v", cluster, service, command)
-	postBody := fmt.Sprintf("{\"items\": [%v]}", strings.Join(AddQutes(roleNames), ","))
+	var joinedRoleNames string
+	if len(roleNameFilter) > 0 {
+		joinedRoleNames = roleNameFilter
+	} else {
+		joinedRoleNames = strings.Join(AddQuots(roleNames), ",")
+	}
+	postBody := fmt.Sprintf("{\"items\": [%v]}", joinedRoleNames)
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlPostCommand(uri, postBody)
 		response = []byte(c.RunGatewayCMCommand(curlCommand, verbose, true).StdOut)

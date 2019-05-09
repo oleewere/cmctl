@@ -660,6 +660,7 @@ func main() {
 						os.Exit(1)
 					}
 					filter := cm.CreateFilter(clustersFilter, serviceFilter, rolesFilter, "", false)
+					filter.Roles = cm.UpperAllInSlice(filter.Roles)
 					if len(filter.Services) > 1 {
 						fmt.Println("Only 1 service can be selected as a filter!")
 						os.Exit(1)
@@ -685,9 +686,10 @@ func main() {
 							}
 						}
 					}
-
-					if len(roleNames) > 0 {
-						cmServer.RunRolesOperation(clustersFilter, serviceFilter, roleNames, command, true)
+					roleNameFilter := c.String("name")
+					if len(roleNames) > 0 || len(roleNameFilter) > 0 {
+						roleNameFilter := c.String("name")
+						cmServer.RunRolesOperation(clustersFilter, serviceFilter, roleNames, roleNameFilter, command, true)
 					} else {
 						fmt.Println("No roles are selected! (out filtered ?)")
 						os.Exit(1)
@@ -699,7 +701,8 @@ func main() {
 					cli.StringFlag{Name: "command, c", Usage: "Command: start/stop/restart"},
 					cli.StringFlag{Name: "clusters", Usage: "Clusters filter (comma separated)"},
 					cli.StringFlag{Name: "service, s", Usage: "Services filter"},
-					cli.StringFlag{Name: "roles, r", Usage: "Roles filter (comma separated)"},
+					cli.StringFlag{Name: "roles, r", Usage: "Role type filter (comma separated)"},
+					cli.StringFlag{Name: "name, n", Usage: "Role name filter"},
 				},
 			},
 		},
@@ -860,6 +863,7 @@ func main() {
 				os.Exit(1)
 			}
 			filter := cm.CreateFilter(c.String("clusters"), c.String("services"), c.String("roles"), c.String("hosts"), c.Bool("server"))
+			filter.Roles = cm.UpperAllInSlice(filter.Roles)
 			hosts := cmServer.GetFilteredHosts(filter)
 			cmServer.RunRemoteHostCommand(command, hosts, filter.Server)
 			return nil
@@ -869,7 +873,7 @@ func main() {
 			cli.BoolFlag{Name: "server", Usage: "Filter on CM server"},
 			cli.StringFlag{Name: "clusters", Usage: "Filter on clusters (comma separated)"},
 			cli.StringFlag{Name: "services", Usage: "Filter on services (comma separated)"},
-			cli.StringFlag{Name: "roles", Usage: "Filter on roles (comma separated)"},
+			cli.StringFlag{Name: "roles", Usage: "Filter on role types (comma separated)"},
 			cli.StringFlag{Name: "hosts", Usage: "Filter on hosts (comma separated)"},
 		},
 	}

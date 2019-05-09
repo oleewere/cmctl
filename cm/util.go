@@ -3,6 +3,7 @@ package cm
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // SliceContains check that a string slice contains an element or not
@@ -39,10 +40,20 @@ func Exists(name string) bool {
 	return true
 }
 
-func AddQutes(slice []string) []string {
+// AddQuots add quotation for every strings in a list
+func AddQuots(slice []string) []string {
 	newSlice := make([]string, 0)
 	for _, str := range slice {
 		newSlice = append(newSlice, "\""+str+"\"")
+	}
+	return newSlice
+}
+
+// UpperAllInSlice uppercase all string in a list
+func UpperAllInSlice(slice []string) []string {
+	newSlice := make([]string, 0)
+	for _, str := range slice {
+		newSlice = append(newSlice, strings.ToUpper(str))
 	}
 	return newSlice
 }
