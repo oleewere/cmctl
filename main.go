@@ -549,7 +549,7 @@ func main() {
 						}
 						return nil
 					}
-					printJson(clusterTemplate)
+					printJSON(clusterTemplate)
 					return nil
 				},
 				Flags: []cli.Flag{
@@ -1147,11 +1147,11 @@ func printTable(title string, headers []string, data [][]string, c *cli.Context)
 	}
 }
 
-func printJson(b []byte) {
-	fmt.Println(formatJson(b).String())
+func printJSON(b []byte) {
+	fmt.Println(formatJSON(b).String())
 }
 
-func formatJson(b []byte) *bytes.Buffer {
+func formatJSON(b []byte) *bytes.Buffer {
 	var out bytes.Buffer
 	err := json.Indent(&out, b, "", "    ")
 	if err != nil {
