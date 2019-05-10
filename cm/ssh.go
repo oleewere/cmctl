@@ -21,17 +21,17 @@ type RemoteResponse struct {
 
 // RunGatewayCMCommand run command on CM CB gateway
 func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool, printEmptyResponse bool) RemoteResponse {
-	connectionProfileId := c.ConnectionProfile
-	if len(connectionProfileId) == 0 {
+	connectionProfileID := c.ConnectionProfile
+	if len(connectionProfileID) == 0 {
 		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileId)
+	connectionProfile := GetConnectionProfileById(connectionProfileID)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
 	responses := make(map[string]RemoteResponse)
-	ssh := createSshConfig(connectionProfile, c.Hostname, "")
+	ssh := createSSHConfig(connectionProfile, c.Hostname, "")
 	go func(ssh *easyssh.MakeConfig, command string, responses map[string]RemoteResponse) {
 		defer wg.Done()
 		stdout, stderr, done, err := ssh.Run(command)
@@ -64,16 +64,16 @@ func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool, printEmp
 
 // CopyToCMGateway copy local file to gateway host
 func (c CMServer) CopyToCMGateway(source string, dest string) {
-	connectionProfileId := c.ConnectionProfile
-	if len(connectionProfileId) == 0 {
+	connectionProfileID := c.ConnectionProfile
+	if len(connectionProfileID) == 0 {
 		fmt.Println("No connection profile is attached for the active ambari server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileId)
+	connectionProfile := GetConnectionProfileById(connectionProfileID)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	ssh := createSshConfig(connectionProfile, c.Hostname, "")
+	ssh := createSSHConfig(connectionProfile, c.Hostname, "")
 	go func(ssh *easyssh.MakeConfig, source string, dest string, host string) {
 		defer wg.Done()
 		err := ssh.Scp(source, dest)
@@ -91,12 +91,12 @@ func (c CMServer) CopyToCMGateway(source string, dest string) {
 
 // RunRemoteHostCommand executes bash commands on CM hosts
 func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]bool, skipJump bool) map[string]RemoteResponse {
-	connectionProfileId := c.ConnectionProfile
-	if len(connectionProfileId) == 0 {
+	connectionProfileID := c.ConnectionProfile
+	if len(connectionProfileID) == 0 {
 		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileId)
+	connectionProfile := GetConnectionProfileById(connectionProfileID)
 	var hosts map[string]bool
 	if len(filteredHosts) > 0 {
 		hosts = filteredHosts
@@ -111,7 +111,7 @@ func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]
 		gatewayHost = c.Hostname
 	}
 	for host := range hosts {
-		ssh := createSshConfig(connectionProfile, host, gatewayHost)
+		ssh := createSSHConfig(connectionProfile, host, gatewayHost)
 		go func(ssh *easyssh.MakeConfig, command string, host string, response map[string]RemoteResponse) {
 			defer wg.Done()
 			stdout, stderr, done, err := ssh.Run(command)
@@ -153,7 +153,41 @@ func DownloadViaScp(sshConfig *easyssh.MakeConfig, source string, dest string, s
 	return nil
 }
 
-func createSshConfig(connectionProfile ConnectionProfile, host string, gatewayHost string) *easyssh.MakeConfig {
+// CopyToRemote copy local file to remote host(s)
+func (c CMServer) CopyToRemote(source string, dest string, filteredHosts map[string]bool, gateway string) {
+	connectionProfileID := c.ConnectionProfile
+	if len(connectionProfileID) == 0 {
+		fmt.Println("No connection profile is attached for the active CM server entry!")
+		os.Exit(1)
+	}
+	connectionProfile := GetConnectionProfileById(connectionProfileID)
+	var hosts map[string]bool
+	if len(filteredHosts) > 0 {
+		hosts = filteredHosts
+	} else {
+		hosts = c.GetFilteredHosts(Filter{})
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(hosts))
+	for host := range hosts {
+		ssh := createSSHConfig(connectionProfile, host, gateway)
+		go func(ssh *easyssh.MakeConfig, source string, dest string, host string) {
+			defer wg.Done()
+			err := ssh.Scp(source, dest)
+			// Handle errors
+			if err != nil {
+				errMsg := fmt.Sprintf("Can't run remote command on host '%v (scp %v to %v)", host, source, dest)
+				fmt.Println(errMsg)
+			} else {
+				succMsg := fmt.Sprintf("Copying to remote host '%v' is successful. (from - %v, to %v)", host, source, dest)
+				fmt.Println(succMsg)
+			}
+		}(ssh, source, dest, host)
+	}
+	wg.Wait()
+}
+
+func createSSHConfig(connectionProfile ConnectionProfile, host string, gatewayHost string) *easyssh.MakeConfig {
 	if len(gatewayHost) > 0 {
 		return &easyssh.MakeConfig{
 			User:    connectionProfile.Username,
