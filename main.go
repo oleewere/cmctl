@@ -590,7 +590,7 @@ func main() {
 			{
 				Name:    "list",
 				Aliases: []string{"ls"},
-				Usage:   "Print all services per cluster",
+				Usage:   "Print all roles per service / cluster",
 				Action: func(c *cli.Context) error {
 					cmServer := cm.GetActiveCM()
 					validateActiveCM(cmServer)
@@ -715,7 +715,7 @@ func main() {
 			{
 				Name:    "list",
 				Aliases: []string{"ls"},
-				Usage:   "Print all services per cluster",
+				Usage:   "Print all users per cluster",
 				Action: func(c *cli.Context) error {
 					cmServer := cm.GetActiveCM()
 					validateActiveCM(cmServer)
@@ -739,6 +739,146 @@ func main() {
 					}
 
 					return nil
+				},
+			},
+		},
+	}
+
+	configsCommand := cli.Command{
+		Name:  "configs",
+		Usage: "Config group related opreations",
+		Subcommands: []cli.Command{
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "Print all config groups per role / service / cluster",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+
+					typeFilter := c.String("type")
+					if len(typeFilter) == 0 || !(typeFilter == "service" || typeFilter == "role") {
+						fmt.Println("Filter '--type' is required for this operation ('service' or 'role')")
+					}
+
+					clusters := cmServer.ListClusters()
+					clustersFilter := c.String("clusters")
+
+					if len(clusters) == 0 {
+						fmt.Println(fmt.Sprintf("Not found any clusters for CM server with id '%v'", cmServer.Name))
+						os.Exit(1)
+					}
+					if len(clusters) > 1 && len(clustersFilter) > 0 {
+						fmt.Println("Parameter 'clusters' is required!")
+						os.Exit(1)
+					}
+					if len(clusters) == 1 {
+						clustersFilter = clusters[0].Name
+					}
+
+					serviceFilter := c.String("services")
+					if len(serviceFilter) == 0 {
+						fmt.Println("Parameter 'services' is required!")
+						os.Exit(1)
+					}
+
+					if typeFilter == "service" {
+						filter := cm.CreateFilter(clustersFilter, serviceFilter, "", "", false)
+						var counter int
+						for _, cluster := range filter.Clusters {
+							for _, service := range filter.Services {
+								serviceConfigs := cmServer.ListServiceConfigs(cluster, service)
+								var tableData [][]string
+								for _, configItem := range serviceConfigs {
+									sensitiveStr := "false"
+									if configItem.Sensitive {
+										sensitiveStr = "true"
+									}
+									tableData = append(tableData, []string{configItem.Name, configItem.Value, sensitiveStr})
+								}
+								prefixData := ""
+								if counter > 0 {
+									prefixData = "\n"
+								}
+								counter++
+								header := fmt.Sprintf("%vConfigs - %v (cluster: %v):", prefixData, service, cluster)
+								printTable(header, []string{"NAME", "VALUE", "SENSITIVE"}, tableData, c)
+							}
+						}
+					}
+					if typeFilter == "role" {
+						rolesFilter := c.String("roles")
+						filter := cm.CreateFilter(clustersFilter, serviceFilter, rolesFilter, "", false)
+						if len(filter.Roles) > 0 && len(filter.Services) > 1 {
+							fmt.Println("Use exactly 1 service for '--services' with roles filter!")
+							os.Exit(1)
+						}
+						var counter int
+						for _, cluster := range filter.Clusters {
+							for _, service := range filter.Services {
+								roleConfigGroups := cmServer.ListRoleConfigGroups(cluster, service)
+								for _, roleConfigGroup := range roleConfigGroups {
+									if len(filter.Roles) > 0 && !cm.SliceContains(roleConfigGroup.RoleType, filter.Roles) {
+										continue
+									}
+									var tableData [][]string
+									for _, configItem := range roleConfigGroup.ConfigItems {
+										sensitiveStr := "false"
+										if configItem.Sensitive {
+											sensitiveStr = "true"
+										}
+										tableData = append(tableData, []string{configItem.Name, configItem.Value, sensitiveStr,
+											roleConfigGroup.Name, service, cluster})
+									}
+									prefixData := ""
+									if counter > 0 {
+										prefixData = "\n"
+									}
+									counter++
+									header := fmt.Sprintf("%vRole Config Group - %v (role type: %v):", prefixData, roleConfigGroup.Name, roleConfigGroup.RoleType)
+									printTable(header, []string{"NAME", "VALUE", "SENSITIVE", "ROLE CONFIG GROUP", "SERVICE", "CLUSTER"}, tableData, c)
+								}
+							}
+						}
+					}
+
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "type, t", Usage: "Config group type (service or role)"},
+					cli.StringFlag{Name: "clusters, c", Usage: "Clusters filter (comma separated)"},
+					cli.StringFlag{Name: "services, s", Usage: "Services filter (comma separated)"},
+					cli.StringFlag{Name: "roles, r", Usage: "Role type filter (comma separated)"},
+				},
+			},
+			{
+				Name:  "create",
+				Usage: "Create service or role config",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "cluster", Usage: "Cluster filter"},
+					cli.StringFlag{Name: "service", Usage: "Service filter"},
+					cli.StringFlag{Name: "role", Usage: "Role filter"},
+				},
+			},
+			{
+				Name:  "update",
+				Usage: "Update service or role config",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "cluster", Usage: "Cluster filter"},
+					cli.StringFlag{Name: "service", Usage: "Service filter"},
+					cli.StringFlag{Name: "role", Usage: "Role filter"},
 				},
 			},
 		},
@@ -885,6 +1025,7 @@ func main() {
 	app.Commands = append(app.Commands, serviesCommand)
 	app.Commands = append(app.Commands, rolesCommand)
 	app.Commands = append(app.Commands, usersCommand)
+	app.Commands = append(app.Commands, configsCommand)
 	app.Commands = append(app.Commands, inventoryCommand)
 	app.Commands = append(app.Commands, saltCommand)
 	app.Commands = append(app.Commands, execCommand)

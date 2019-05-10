@@ -1,7 +1,7 @@
 package cm
 
 // ConvertHostsResponse convert items response to Hosts response
-func (c CMItems) ConvertHostsResponse() []Host {
+func (c Items) ConvertHostsResponse() []Host {
 	hosts := []Host{}
 	for _, item := range c.Items {
 		hosts = createHostsType(item, hosts)
@@ -10,7 +10,7 @@ func (c CMItems) ConvertHostsResponse() []Host {
 }
 
 // ConvertClustersResponse convert items response to Clusters response
-func (c CMItems) ConvertClustersResponse() []Cluster {
+func (c Items) ConvertClustersResponse() []Cluster {
 	clusters := []Cluster{}
 	for _, item := range c.Items {
 		clusters = createClustersType(item, clusters)
@@ -39,7 +39,7 @@ func ConvertDeploymentResponse(responseMap map[string]interface{}) Deployment {
 }
 
 // ConvertServicesResponse convert items response to Services response
-func (c CMItems) ConvertServicesResponse(cluster string) []Service {
+func (c Items) ConvertServicesResponse(cluster string) []Service {
 	services := []Service{}
 	for _, item := range c.Items {
 		services = createServiceType(item, services, cluster)
@@ -48,7 +48,7 @@ func (c CMItems) ConvertServicesResponse(cluster string) []Service {
 }
 
 // ConvertRolesResponse convert items response to Roles response
-func (c CMItems) ConvertRolesResponse(cluster string, service string) []Role {
+func (c Items) ConvertRolesResponse(cluster string, service string) []Role {
 	roles := []Role{}
 	for _, item := range c.Items {
 		roles = createRoleType(item, roles, cluster, service)
@@ -57,12 +57,88 @@ func (c CMItems) ConvertRolesResponse(cluster string, service string) []Role {
 }
 
 // ConvertUsersResponse convert items response to Users response
-func (c CMItems) ConvertUsersResponse() []User {
+func (c Items) ConvertUsersResponse() []User {
 	users := []User{}
 	for _, item := range c.Items {
 		users = createUserType(item, users)
 	}
 	return users
+}
+
+// ConvertServiceConfigResponse convert items response to config items
+func (c Items) ConvertServiceConfigResponse() []ConfigItem {
+	configs := []ConfigItem{}
+	for _, item := range c.Items {
+		configs = createConfigType(item, configs)
+	}
+	return configs
+}
+
+// ConvertRoleConfigGroupsResponse convert items to role configuration groups
+func (c Items) ConvertRoleConfigGroupsResponse() []RoleConfigGroup {
+	roleConfigGroups := []RoleConfigGroup{}
+	for _, item := range c.Items {
+		roleConfigGroups = createRoleConfigGroupType(item, roleConfigGroups)
+	}
+	return roleConfigGroups
+}
+
+func createRoleConfigGroupType(item Item, roleConfigGroups []RoleConfigGroup) []RoleConfigGroup {
+	roleConfigGroup := RoleConfigGroup{}
+	if name, ok := item["name"]; ok {
+		roleConfigGroup.Name = name.(string)
+	}
+	if displayName, ok := item["displayName"]; ok {
+		roleConfigGroup.DisplayName = displayName.(string)
+	}
+	if roleType, ok := item["roleType"]; ok {
+		roleConfigGroup.RoleType = roleType.(string)
+	}
+	if base, ok := item["base"]; ok {
+		roleConfigGroup.Base = base.(bool)
+	}
+
+	if serviceRefVal, ok := item["serviceRef"]; ok {
+		serviceRef := serviceRefVal.(map[string]interface{})
+		if clusterName, ok := serviceRef["clusterName"]; ok {
+			roleConfigGroup.ClusterName = clusterName.(string)
+		}
+		if serviceName, ok := serviceRef["serviceName"]; ok {
+			roleConfigGroup.ServiceName = serviceName.(string)
+		}
+	}
+	configItems := make([]ConfigItem, 0)
+	if configVal, ok := item["config"]; ok {
+		config := configVal.(map[string]interface{})
+		if itemsVal, ok := config["items"]; ok {
+			items := itemsVal.([]interface{})
+			for _, item := range items {
+				configItem := item.(map[string]interface{})
+				configItems = createConfigType(configItem, configItems)
+			}
+		}
+	}
+	roleConfigGroup.ConfigItems = configItems
+
+	roleConfigGroups = append(roleConfigGroups, roleConfigGroup)
+	return roleConfigGroups
+}
+
+func createConfigType(item Item, configs []ConfigItem) []ConfigItem {
+	configItem := ConfigItem{}
+
+	if name, ok := item["name"]; ok {
+		configItem.Name = name.(string)
+	}
+	if value, ok := item["value"]; ok {
+		configItem.Value = value.(string)
+	}
+	if sensitive, ok := item["sensitive"]; ok {
+		configItem.Sensitive = sensitive.(bool)
+	}
+
+	configs = append(configs, configItem)
+	return configs
 }
 
 func createUserType(item Item, users []User) []User {

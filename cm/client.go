@@ -67,19 +67,19 @@ func GetHttpClient() *http.Client {
 }
 
 // ProcessCMItems get "items" from CM server response
-func ProcessCMItems(request *http.Request) CMItems {
+func ProcessCMItems(request *http.Request) Items {
 	bodyBytes := ProcessRequest(request)
 	return ProcessCMItemsFromBytes(bodyBytes)
 }
 
 // ProcessCMItemsFromSSHResponse get "items" from CM gateway SSH response
-func ProcessCMItemsFromSSHResponse(sshResponse RemoteResponse) CMItems {
+func ProcessCMItemsFromSSHResponse(sshResponse RemoteResponse) Items {
 	return ProcessCMItemsFromBytes([]byte(sshResponse.StdOut))
 }
 
 // ProcessCMItemsFromBytes get "items" from bytes
-func ProcessCMItemsFromBytes(bodyBytes []byte) CMItems {
-	var cmItems CMItems
+func ProcessCMItemsFromBytes(bodyBytes []byte) Items {
+	var cmItems Items
 	err := json.Unmarshal(bodyBytes, &cmItems)
 	if err != nil {
 		fmt.Println(err)

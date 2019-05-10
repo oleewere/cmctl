@@ -8,7 +8,7 @@ import (
 
 // ListClusters get all the registered clusters
 func (c CMServer) ListClusters() []Cluster {
-	var cmItems CMItems
+	var cmItems Items
 	var uri = "clusters"
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
@@ -22,7 +22,7 @@ func (c CMServer) ListClusters() []Cluster {
 
 // ListHosts get all the registered hosts
 func (c CMServer) ListHosts() []Host {
-	var cmItems CMItems
+	var cmItems Items
 	var uri = "hosts"
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
@@ -36,7 +36,7 @@ func (c CMServer) ListHosts() []Host {
 
 // ListServices get all the registered services per cluster
 func (c CMServer) ListServices(cluster string) []Service {
-	var cmItems CMItems
+	var cmItems Items
 	var uri = fmt.Sprintf("clusters/%v/services", cluster)
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
@@ -75,7 +75,7 @@ func (c CMServer) ExportClusterTemplate(cluster string) []byte {
 
 // GetUsers returns a list of the user names configured in the system.
 func (c CMServer) GetUsers() []User {
-	var cmItems CMItems
+	var cmItems Items
 	var uri = "users"
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
@@ -128,4 +128,32 @@ func (c CMServer) RunRolesOperation(cluster string, service string, roleNames []
 		}
 	}
 	return response
+}
+
+// ListServiceConfigs gather service configurations
+func (c CMServer) ListServiceConfigs(cluster string, service string) []ConfigItem {
+	var cmItems Items
+	var uri = fmt.Sprintf("clusters/%v/services/%v/config", cluster, service)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
+	} else {
+		request := c.CreateGetRequest(uri)
+		cmItems = ProcessCMItems(request)
+	}
+	return cmItems.ConvertServiceConfigResponse()
+}
+
+// ListRoleConfigGroups gather role configuration groups
+func (c CMServer) ListRoleConfigGroups(cluster string, service string) []RoleConfigGroup {
+	var cmItems Items
+	var uri = fmt.Sprintf("clusters/%v/services/%v/roleConfigGroups", cluster, service)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
+	} else {
+		request := c.CreateGetRequest(uri)
+		cmItems = ProcessCMItems(request)
+	}
+	return cmItems.ConvertRoleConfigGroupsResponse()
 }

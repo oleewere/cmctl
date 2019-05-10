@@ -22,8 +22,8 @@ type ConnectionProfile struct {
 	Username string `json:"username"`
 }
 
-// CMItems global items from CM Server rest API response
-type CMItems struct {
+// Items global items from CM Server rest API response
+type Items struct {
 	Href  string `json:"href"`
 	Items []Item `json:"items"`
 }
@@ -60,6 +60,24 @@ type Service struct {
 	State       string `json:"serviceState,omitempty"`
 	ClusterName string `json:"clusterName,omitempty"`
 	StaleConfig string `json:"configStalenessStatus,omitempty"`
+}
+
+// ConfigItem represents a config entry
+type ConfigItem struct {
+	Name      string `json:"name,omitempty"`
+	Value     string `json:"value,omitempty"`
+	Sensitive bool   `json:"sensitive,omitempty"`
+}
+
+// RoleConfigGroup holds role configuration group
+type RoleConfigGroup struct {
+	Name        string       `json:"name,omitempty"`
+	DisplayName string       `json:"displayName,omitempty"`
+	RoleType    string       `json:"roleType,omitempty"`
+	ClusterName string       `json:"clusterName,omitempty"`
+	ServiceName string       `json:"serviceName,omitempty"`
+	Base        bool         `json:"base,omitempty"`
+	ConfigItems []ConfigItem `json:"items,omitempty"`
 }
 
 // Role holds role details
