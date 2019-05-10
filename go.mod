@@ -9,4 +9,5 @@ require (
 	github.com/urfave/cli v1.20.0
 	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a // indirect
+	gopkg.in/yaml.v2 v2.2.2
 )
