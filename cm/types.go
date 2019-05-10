@@ -64,9 +64,16 @@ type Service struct {
 
 // ConfigItem represents a config entry
 type ConfigItem struct {
-	Name      string `json:"name,omitempty"`
-	Value     string `json:"value,omitempty"`
-	Sensitive bool   `json:"sensitive,omitempty"`
+	Name                         string `json:"name,omitempty"`
+	Value                        string `json:"value,omitempty"`
+	DisplayName                  string `json:"displayName,omitempty"`
+	Description                  string `json:"description,omitempty"`
+	Sensitive                    bool   `json:"sensitive,omitempty"`
+	Required                     bool   `json:"required,omitempty"`
+	RelatedName                  string `json:"relatedName,omitempty"`
+	Default                      string `json:"default,omitempty"`
+	ValidationState              string `json:"validationState,omitempty"`
+	ValidationWarningsSuppressed bool   `json:"validationWarningsSuppressed,omitempty"`
 }
 
 // RoleConfigGroup holds role configuration group

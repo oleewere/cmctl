@@ -133,8 +133,29 @@ func createConfigType(item Item, configs []ConfigItem) []ConfigItem {
 	if value, ok := item["value"]; ok {
 		configItem.Value = value.(string)
 	}
+	if displayName, ok := item["displayName"]; ok {
+		configItem.DisplayName = displayName.(string)
+	}
+	if description, ok := item["description"]; ok {
+		configItem.Description = description.(string)
+	}
+	if defaultVal, ok := item["default"]; ok {
+		configItem.Default = defaultVal.(string)
+	}
 	if sensitive, ok := item["sensitive"]; ok {
 		configItem.Sensitive = sensitive.(bool)
+	}
+	if required, ok := item["required"]; ok {
+		configItem.Required = required.(bool)
+	}
+	if relatedName, ok := item["relatedName"]; ok {
+		configItem.RelatedName = relatedName.(string)
+	}
+	if validationWarningsSuppressed, ok := item["validationWarningsSuppressed"]; ok {
+		configItem.ValidationWarningsSuppressed = validationWarningsSuppressed.(bool)
+	}
+	if validationState, ok := item["validationState"]; ok {
+		configItem.ValidationState = validationState.(string)
 	}
 
 	configs = append(configs, configItem)

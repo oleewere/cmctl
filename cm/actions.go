@@ -131,9 +131,13 @@ func (c CMServer) RunRolesOperation(cluster string, service string, roleNames []
 }
 
 // ListServiceConfigs gather service configurations
-func (c CMServer) ListServiceConfigs(cluster string, service string) []ConfigItem {
+func (c CMServer) ListServiceConfigs(cluster string, service string, full bool) []ConfigItem {
 	var cmItems Items
-	var uri = fmt.Sprintf("clusters/%v/services/%v/config", cluster, service)
+	fullView := ""
+	if full {
+		fullView = "?view=FULL"
+	}
+	var uri = fmt.Sprintf("clusters/%v/services/%v/config%v", cluster, service, fullView)
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
 		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
@@ -145,9 +149,13 @@ func (c CMServer) ListServiceConfigs(cluster string, service string) []ConfigIte
 }
 
 // ListRoleConfigGroups gather role configuration groups
-func (c CMServer) ListRoleConfigGroups(cluster string, service string) []RoleConfigGroup {
+func (c CMServer) ListRoleConfigGroups(cluster string, service string, full bool) []RoleConfigGroup {
 	var cmItems Items
-	var uri = fmt.Sprintf("clusters/%v/services/%v/roleConfigGroups", cluster, service)
+	fullView := ""
+	if full {
+		fullView = "?view=FULL"
+	}
+	var uri = fmt.Sprintf("clusters/%v/services/%v/roleConfigGroups%v", cluster, service, fullView)
 	if c.UseGateway {
 		curlCommand := c.CreateGatewayCurlGetCommand(uri)
 		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
@@ -156,4 +164,59 @@ func (c CMServer) ListRoleConfigGroups(cluster string, service string) []RoleCon
 		cmItems = ProcessCMItems(request)
 	}
 	return cmItems.ConvertRoleConfigGroupsResponse()
+}
+
+// UpdateServiceConfigs refresh service configuration
+func (c CMServer) UpdateServiceConfigs(cluster string, service string, keyValueMap map[string]string, clear bool, verbose bool) []byte {
+	var response []byte
+	var uri = fmt.Sprintf("clusters/%v/services/%v/config", cluster, service) + "?message=Service%20%27" + service + "%27%20config%20update%20by%20CMCTL."
+	putBody := createItemsMapListString(keyValueMap, clear)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlPutCommand(uri, putBody)
+		response = []byte(c.RunGatewayCMCommand(curlCommand, verbose, false).StdOut)
+	} else {
+		bodyBytesBuffer := bytes.Buffer{}
+		bodyBytesBuffer.WriteString(putBody)
+		request := c.CreatePostRequest(bodyBytesBuffer, uri)
+		response = ProcessRequest(request)
+		if verbose {
+			fmt.Println(string(response))
+		}
+	}
+	return response
+}
+
+// UpdateRoleConfigs refresh role group configuration
+func (c CMServer) UpdateRoleConfigs(cluster string, service string, roleType string, roleConfigGroup string,
+	keyValueMap map[string]string, clear bool, verbose bool) []byte {
+	var response []byte
+	var uri = fmt.Sprintf("clusters/%v/services/%v/roleConfigGroups/%v/config", cluster, service, roleConfigGroup) +
+		"?message=Role%20%27" + roleConfigGroup + "%27%20config%20update%20by%20CMCTL."
+	putBody := createItemsMapListString(keyValueMap, clear)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlPutCommand(uri, putBody)
+		response = []byte(c.RunGatewayCMCommand(curlCommand, verbose, false).StdOut)
+	} else {
+		bodyBytesBuffer := bytes.Buffer{}
+		bodyBytesBuffer.WriteString(putBody)
+		request := c.CreatePostRequest(bodyBytesBuffer, uri)
+		response = ProcessRequest(request)
+		if verbose {
+			fmt.Println(string(response))
+		}
+	}
+	return response
+}
+
+func createItemsMapListString(keyValueMap map[string]string, clear bool) string {
+	itemList := make([]string, 0)
+	for key, value := range keyValueMap {
+		valueStr := "\"" + value + "\""
+		if clear {
+			valueStr = "null"
+		}
+		item := fmt.Sprintf("{\"name\":\"%v\",\"value\":%v}", key, valueStr)
+		itemList = append(itemList, item)
+	}
+	return fmt.Sprintf("{\"items\": [%v]}", strings.Join(itemList, ","))
 }

@@ -147,6 +147,11 @@ func (c CMServer) CreateGatewayCurlPostCommand(uri string, body string) string {
 	return createGatewayCurlCommand(c, uri, "POST", body)
 }
 
+// CreateGatewayCurlPutCommand generate a curl PUT command for gateway usage
+func (c CMServer) CreateGatewayCurlPutCommand(uri string, body string) string {
+	return createGatewayCurlCommand(c, uri, "PUT", body)
+}
+
 func createGatewayCurlCommand(c CMServer, uri string, method string, body string) string {
 	bodyCommand := ""
 	if len(body) > 0 {
