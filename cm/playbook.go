@@ -18,6 +18,8 @@ const (
 	LocalCommand = "LocalCommand"
 	// SaltCommand salt command type for running salt commands on the gateway
 	SaltCommand = "SaltCommand"
+	// SaltSyncCommand sync salt scripts command
+	SaltSyncCommand = "SaltSyncCommand"
 	// Download command type for downloading a file from an url
 	Download = "Download"
 	// Upload command type for uploading files to the agent hosts
@@ -126,6 +128,9 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 			if task.Type == Upload {
 				c.ExecuteUploadFileTask(task, filteredHosts, inventory)
 			}
+			if task.Type == SaltSyncCommand {
+				c.ExecuteSaltSyncCommand(task)
+			}
 			/*
 				if task.Type == Config {
 					c.ExecuteConfigCommand(task)
@@ -207,6 +212,32 @@ func (c CMServer) ExecuteRemoteCommandTask(task Task, filteredHosts map[string]b
 	if len(task.Command) > 0 {
 		fmt.Println("Execute remote command: " + task.Command)
 		c.RunRemoteHostCommand(task.Command, filteredHosts, task.CMServerFilter, inventory)
+	}
+}
+
+// ExecuteSaltSyncCommand sync salt scripts from folder
+func (c CMServer) ExecuteSaltSyncCommand(task Task) {
+	if task.Parameters != nil {
+		if source, ok := task.Parameters["source"]; ok {
+			target := saltScriptsFolderDefault
+			clear := false
+			filter := ""
+			if targetVal, ok := task.Parameters["target"]; ok {
+				target = targetVal
+			}
+			if filterVal, ok := task.Parameters["filter"]; ok {
+				filter = filterVal
+			}
+			if clearVal, ok := task.Parameters["clear"]; ok {
+				if clearVal == "true" {
+					clear = true
+				}
+			}
+			c.SyncSaltScripts(source, target, filter, clear)
+		} else {
+			fmt.Println("'source' parameter is required for 'SaltSyncCommand' task")
+			os.Exit(1)
+		}
 	}
 }
 

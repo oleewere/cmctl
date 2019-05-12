@@ -1,0 +1,10 @@
+name: "Refresh salt scripts"
+inputs:
+  - name: ScriptsLocation
+    default: "~/Projects/cloudbreak/orchestrator-salt/src/main/resources/salt"
+tasks:
+  - name: "Sync salt scripts with {{ .ScriptsLocation }}"
+    type: SaltSyncCommand
+    parameters:
+      source: "{{ .ScriptsLocation }}"
+      clear: false

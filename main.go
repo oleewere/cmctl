@@ -1185,6 +1185,34 @@ func main() {
 		},
 	}
 
+	playbookCommand := cli.Command{
+		Name:  "playbook",
+		Usage: "Execute a list of tasks defined in playbook file",
+		Action: func(c *cli.Context) error {
+			cmServer := cm.GetActiveCM()
+			validateActiveCM(cmServer)
+			playbookFile := c.String("file")
+			inventoryFile := c.String("inventory")
+			if len(playbookFile) == 0 {
+				fmt.Println("Provide -f or --file parameter")
+				os.Exit(1)
+			}
+			var inventory *cm.Inventory
+			if len(inventoryFile) > 0 {
+				inventoryVal := cm.ReadInventoryFromFile(inventoryFile)
+				inventory = &inventoryVal
+			}
+			playbook := cm.LoadPlaybookFile(playbookFile, c.String("vars"))
+			cmServer.ExecutePlaybook(playbook, inventory)
+			return nil
+		},
+		Flags: []cli.Flag{
+			cli.StringFlag{Name: "file, f", Usage: "Playbook file"},
+			cli.StringFlag{Name: "inventory, i", Usage: "Hosts inventory file"},
+			cli.StringFlag{Name: "vars, v", Usage: "Provided extra variables (e.g.: --vars='myvar1=myvalue1 myvar2=myvalue2')"},
+		},
+	}
+
 	app.Commands = append(app.Commands, serversCommand)
 	app.Commands = append(app.Commands, profileCommand)
 	app.Commands = append(app.Commands, clustersCommand)
@@ -1196,6 +1224,7 @@ func main() {
 	app.Commands = append(app.Commands, inventoryCommand)
 	app.Commands = append(app.Commands, saltCommand)
 	app.Commands = append(app.Commands, execCommand)
+	app.Commands = append(app.Commands, playbookCommand)
 
 	err := app.Run(os.Args)
 	if err != nil {
