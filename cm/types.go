@@ -126,10 +126,11 @@ type UserAuthRole struct {
 
 // Inventory holds hosts mappings for resources
 type Inventory struct {
-	ClusterName         string
-	Hosts               []Host
-	ServiceRoleHostsMap map[string]map[string][]HostRoleNamePair
-	ServiceHostsMap     map[string][]string
+	ServerAddress       string                                   `json:"server,omitempty"`
+	ClusterName         string                                   `json:"cluster,omitempty"`
+	Hosts               []Host                                   `json:"agents,omitempty"`
+	ServiceRoleHostsMap map[string]map[string][]HostRoleNamePair `json:"serviceRoleHostsMap,omitempty"`
+	ServiceHostsMap     map[string][]string                      `json:"serviceHostsMap,omitempty"`
 }
 
 // IniConfiguration holds inventory config sections by name
@@ -146,6 +147,6 @@ type Section struct {
 
 // HostRoleNamePair holds host name and role name for inventory resource
 type HostRoleNamePair struct {
-	HostName string
-	RoleName string
+	HostName string `json:"hostName,omitempty"`
+	RoleName string `json:"roleName,omitempty"`
 }

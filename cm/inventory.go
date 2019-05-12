@@ -141,7 +141,7 @@ func (c CMServer) CreateInventoryFiles(targetDir string, outputFile string, clus
 	}
 }
 
-// ReadInventoryFromFile parse inventory file and create inventory resource from it
+// ReadInventoryFromFile parse inventory file and create an inventory resource from it
 func ReadInventoryFromFile(inventoryFilePath string) Inventory {
 	inventory := Inventory{}
 	cfg, err := LoadIniFile(inventoryFilePath)
@@ -149,8 +149,51 @@ func ReadInventoryFromFile(inventoryFilePath string) Inventory {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("TODO")
-	fmt.Println(*cfg.Sections)
+
+	sections := *cfg.Sections
+	serviceHostMap := make(map[string][]string)
+	serviceRoleHostsMap := make(map[string]map[string][]HostRoleNamePair)
+	for _, section := range sections {
+		if section.Name == "cluster" {
+			inventory.ClusterName = section.KeyValueMap["name"]
+		} else if section.Name == "server" {
+			serverHosts := *section.Values
+			inventory.ServerAddress = serverHosts[0]
+		} else if section.Name == "agent" {
+			agentHosts := *section.Values
+			hosts := make([]Host, 0)
+			for _, agentHost := range agentHosts {
+				host := Host{HostName: agentHost, IPAddress: agentHost}
+				hosts = append(hosts, host)
+			}
+			inventory.Hosts = hosts
+		} else if strings.HasPrefix(section.Name, "service.") {
+			serviceName := strings.TrimPrefix(section.Name, "service.")
+			serviceHostMap[serviceName] = *section.Values
+		} else if strings.HasPrefix(section.Name, "role.") && strings.HasSuffix(section.Name, ":vars") {
+			roleParts := strings.Split(section.Name, ".")
+			serviceName := roleParts[1]
+			withoutVarRoleType := strings.TrimSuffix(roleParts[2], ":vars")
+			roleType := strings.ToUpper(withoutVarRoleType)
+			roleHostMap := section.KeyValueMap
+			var hostRoleNamePairMap map[string][]HostRoleNamePair
+			if servicRoleMapVal, ok := serviceRoleHostsMap[serviceName]; ok {
+				hostRoleNamePairMap = servicRoleMapVal
+			} else {
+				hostRoleNamePairMap = make(map[string][]HostRoleNamePair)
+			}
+			hostRoleNamePairs := make([]HostRoleNamePair, 0)
+			for key, value := range roleHostMap {
+				hostRoleNamePair := HostRoleNamePair{RoleName: key, HostName: value}
+				hostRoleNamePairs = append(hostRoleNamePairs, hostRoleNamePair)
+			}
+			hostRoleNamePairMap[roleType] = hostRoleNamePairs
+			serviceRoleHostsMap[serviceName] = hostRoleNamePairMap
+		}
+	}
+	inventory.ServiceHostsMap = serviceHostMap
+	inventory.ServiceRoleHostsMap = serviceRoleHostsMap
+
 	return inventory
 }
 

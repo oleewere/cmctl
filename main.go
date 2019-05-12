@@ -13,6 +13,7 @@ import (
 	"github.com/oleewere/cmctl/cm"
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 )
 
 // Version that will be generated during the build as a constant
@@ -1033,11 +1034,34 @@ func main() {
 					validateActiveCM(cmServer)
 					iniFile := c.String("inventory")
 					inventory := cm.ReadInventoryFromFile(iniFile)
-					fmt.Println("Show inventory", inventory)
+					outputFormat := "json"
+					outputFormatInput := c.String("output-format")
+					if len(outputFormatInput) > 0 {
+						outputFormat = outputFormatInput
+					}
+					if outputFormat == "json" {
+						bodyBytes, err := json.Marshal(inventory)
+						if err != nil {
+							fmt.Println(err)
+							os.Exit(1)
+						}
+						printJSON(bodyBytes)
+					} else if outputFormat == "yaml" || outputFormat == "yml" {
+						bodyBytes, err := yaml.Marshal(inventory)
+						if err != nil {
+							fmt.Println(err)
+							os.Exit(1)
+						}
+						fmt.Println(string(bodyBytes))
+					} else {
+						fmt.Println(fmt.Sprintf("Unsupported output format: %v", outputFormat))
+						os.Exit(1)
+					}
 					return nil
 				},
 				Flags: []cli.Flag{
 					cli.StringFlag{Name: "inventory, i", Usage: "Inventory file"},
+					cli.StringFlag{Name: "output-format, o", Usage: "Output type (json or yaml)"},
 				},
 			},
 		},
