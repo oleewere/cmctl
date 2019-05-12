@@ -1,0 +1,8 @@
+name: "Restart ZK server role"
+tasks:
+  - name: "Restart ZK server role"
+    debug: true
+    type: RoleCommand
+    service: "zookeeper"
+    role: "SERVER"
+    command: "restart"

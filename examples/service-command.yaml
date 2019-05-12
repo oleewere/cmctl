@@ -1,0 +1,7 @@
+name: "Restart ZK service"
+tasks:
+  - name: "Restart ZK service"
+    debug: true
+    type: ServiceCommand
+    service: "zookeeper"
+    command: "restart"

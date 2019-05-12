@@ -150,12 +150,21 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 				c.ExecuteUploadFileTask(task, filteredHosts, inventory)
 			}
 			if task.Type == SaltSyncCommand {
+				if !c.UseGateway {
+					fmt.Println(fmt.Sprintf("CM server '%v' is not cloudbreak managed!", c.Name))
+					os.Exit(1)
+				}
 				c.ExecuteSaltSyncCommand(task)
+			}
+			if task.Type == SaltCommand {
+				if !c.UseGateway {
+					fmt.Println(fmt.Sprintf("CM server '%v' is not cloudbreak managed!", c.Name))
+					os.Exit(1)
+				}
 			}
 			if task.Type == ServiceConfigUpdate {
 				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
 				clusters := c.getClusterNames(task, filter, inventory)
-				fmt.Println(clusters)
 				for _, cluster := range clusters {
 					c.ExecuteConfigUpdate(task, cluster, filter, false)
 				}
@@ -167,14 +176,28 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 					c.ExecuteConfigUpdate(task, cluster, filter, true)
 				}
 			}
-			/*
-				if task.Type == Config {
-					c.ExecuteConfigCommand(task)
+			if task.Type == ServiceCpmmand {
+				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
+				clusters := c.getClusterNames(task, filter, inventory)
+				for _, cluster := range clusters {
+					c.ExecuteCMCommand(task, cluster, filter, false, make([]Inventory, 0))
 				}
-				if task.Type == RoleCommand {
-					c.ExecuteCMCommand(task)
+			}
+			if task.Type == RoleCommand {
+				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
+				clusters := c.getClusterNames(task, filter, inventory)
+				inventories := make([]Inventory, 0)
+				if inventory != nil {
+					inventories = append(inventories, *inventory)
+				} else {
+					deployment := c.GetDeployment()
+					hosts := c.ListHosts()
+					inventories = CreateInventoriesFromDeploymentsAndHosts(deployment, hosts)
 				}
-			*/
+				for _, cluster := range clusters {
+					c.ExecuteCMCommand(task, cluster, filter, true, inventories)
+				}
+			}
 		} else {
 			if len(task.Name) > 0 {
 				fmt.Println(fmt.Sprintf("Type field for task '%s' is required!", task.Name))
@@ -187,26 +210,40 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 }
 
 // ExecuteCMCommand executes an CM command against services or roles
-func (c CMServer) ExecuteCMCommand(task Task) {
+func (c CMServer) ExecuteCMCommand(task Task, cluster string, filter Filter, roleCommand bool, inventories []Inventory) {
 	if len(task.Command) > 0 {
-		useRoleFilter := false
-		useServiceFilter := false
-		if len(task.RoleTypeFilter) > 0 {
-			useRoleFilter = true
-		} else if len(task.ServiceFilter) > 0 {
-			useServiceFilter = true
+		if len(filter.Services) == 0 {
+			fmt.Println(fmt.Sprintf("Field 'service' is required for '%v! task type", task.Type))
+			os.Exit(1)
 		}
-
-		if useRoleFilter {
-			filter := CreateFilter(task.ClusterFilter, "", task.RoleTypeFilter, "", false)
-			fmt.Println(filter)
-			//c.RunRolesOperation(task.Command, filter, useServiceFilter, useRoleFilter, task.Command, true)
+		if roleCommand {
+			if len(filter.Services) != 1 {
+				fmt.Println(fmt.Sprintf("Use exactly 1 'service' filter for '%v! task type", task.Type))
+				os.Exit(1)
+			}
+			service := filter.Services[0]
+			roleNames := make([]string, 0)
+			for _, inventory := range inventories {
+				if roleHostsPairMap, ok := inventory.ServiceRoleHostsMap[service]; ok {
+					for role, roleNameHostsPairs := range roleHostsPairMap {
+						for _, roleNameHostsPair := range roleNameHostsPairs {
+							if len(filter.Roles) > 0 && !SliceContains(role, filter.Roles) {
+								continue
+							}
+							roleNames = append(roleNames, roleNameHostsPair.RoleName)
+						}
+					}
+				}
+			}
+			c.RunRolesOperation(cluster, service, roleNames, "", task.Command, true)
+		} else {
+			for _, service := range filter.Services {
+				c.RunServiceOperation(cluster, service, task.Command, true)
+			}
 		}
-		if useServiceFilter {
-			filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, "", "", false)
-			fmt.Println(filter)
-			//c.RunServiceOperation(task.Command, filter, useServiceFilter, useRoleFilter, task.Command, true)
-		}
+	} else {
+		fmt.Println("Field 'command' is required for this task type!")
+		os.Exit(1)
 	}
 }
 
