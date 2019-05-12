@@ -48,7 +48,7 @@ func (c CMServer) CreatePutRequest(body bytes.Buffer, urlSuffix string) *http.Re
 
 // GetCMUri creates the CM uri with /api/vx/ suffix (+ /api/vx/clusters/<cluster> suffix is useCluster is enabled)
 func (c CMServer) GetCMUri(uriSuffix string) string {
-	return fmt.Sprintf("%s://%s:%v/api/v%v/%s", c.Protocol, c.Hostname, c.Port, c.ApiVersion, uriSuffix)
+	return fmt.Sprintf("%s://%s:%v/api/v%v/%s", c.Protocol, c.Hostname, c.Port, c.APIVersion, uriSuffix)
 }
 
 // GetHttpClient create HTTP client instance for CM Server
@@ -157,5 +157,5 @@ func createGatewayCurlCommand(c CMServer, uri string, method string, body string
 	if len(body) > 0 {
 		bodyCommand = fmt.Sprintf(" -H \"Content-Type: application/json\" --data '%v'", body)
 	}
-	return fmt.Sprintf("curl -s -X %v -k -u %v:%v%v 'http://localhost:7180/api/v%v/%v'", method, c.Username, c.Password, bodyCommand, c.ApiVersion, uri)
+	return fmt.Sprintf("curl -s -X %v -k -u %v:%v%v 'http://localhost:7180/api/v%v/%v'", method, c.Username, c.Password, bodyCommand, c.APIVersion, uri)
 }

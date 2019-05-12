@@ -103,7 +103,7 @@ func RegisterNewCMEntry(id string, hostname string, port int, protocol string, u
 	}
 	cmServerEntries := ListCMRegistryEntries()
 	newCmServerEntry := CMServer{Name: id, Hostname: hostname, Port: port, Protocol: protocol, Username: username,
-		Password: password, Active: true, UseGateway: useGateway, ApiVersion: apiVersion}
+		Password: password, Active: true, UseGateway: useGateway, APIVersion: apiVersion}
 	cmServerEntries = append(cmServerEntries, newCmServerEntry)
 	WriteCMServerEntries(cmServerEntries)
 }
@@ -117,7 +117,7 @@ func UpdateCMEntry(id string, hostname string, port int, protocol string, userna
 		os.Exit(1)
 	}
 	updatedCmServerEntry := CMServer{Name: id, Hostname: hostname, Port: port, Protocol: protocol, Username: username, Password: password,
-		Active: true, UseGateway: useGateway, ApiVersion: apiVersion, ConnectionProfile: connectionProfile}
+		Active: true, UseGateway: useGateway, APIVersion: apiVersion, ConnectionProfile: connectionProfile}
 
 	cmServers := ListCMRegistryEntries()
 	newCmServers := make([]CMServer, 0)
