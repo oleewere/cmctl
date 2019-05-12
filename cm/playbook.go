@@ -227,6 +227,7 @@ func (c CMServer) ExecuteCMCommand(task Task, cluster string, filter Filter, rol
 				if roleHostsPairMap, ok := inventory.ServiceRoleHostsMap[service]; ok {
 					for role, roleNameHostsPairs := range roleHostsPairMap {
 						for _, roleNameHostsPair := range roleNameHostsPairs {
+							// filter by host for roles
 							if len(filter.Roles) > 0 && !SliceContains(role, filter.Roles) {
 								continue
 							}
