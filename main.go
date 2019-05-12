@@ -1115,11 +1115,12 @@ func main() {
 						fmt.Println("Command parameter is missing! (use 'command' or 'c')")
 						os.Exit(1)
 					}
-					cmServer.ExecuteSaltCommand(command, c.String("prefix"), c.String("binary"))
+					cmServer.ExecuteSaltCommand(command, c.String("raw-command"), c.String("prefix"), c.String("binary"))
 					return nil
 				},
 				Flags: []cli.Flag{
-					cli.StringFlag{Name: "command, c", Usage: "Command to execute on the minions"},
+					cli.StringFlag{Name: "command, c", Usage: "Command to execute on the minions (run cmd)"},
+					cli.StringFlag{Name: "raw-command, r", Usage: "Raw command to execute on the minions (e.g.: \"'*' cmd.run 'echo hello'\")"},
 					cli.StringFlag{Name: "binary, b", Usage: "Salt binary to use (default: salt)"},
 					cli.StringFlag{Name: "prefix, p", Usage: "Salt binary prefix path (default: /opt/salt_*/bin)"},
 				},
