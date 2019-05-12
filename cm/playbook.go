@@ -46,6 +46,7 @@ type Playbook struct {
 type Task struct {
 	Name           string            `yaml:"name"`
 	Type           string            `yaml:"type"`
+	Debug          bool              `yaml:"debug"`
 	Command        string            `yaml:"command"`
 	CMServerFilter bool              `yaml:"server"`
 	CMAgentFilter  bool              `yaml:"agent"`
@@ -128,6 +129,9 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 	for _, task := range tasks {
 		if len(task.Type) > 0 {
 			filteredHosts := make(map[string]bool)
+			if task.Debug && len(task.Name) > 0 {
+				fmt.Println(fmt.Sprintf("Executing task with name '%v' ...", task.Name))
+			}
 			if !task.CMAgentFilter {
 				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
 				filteredHosts = c.GetFilteredHosts(filter, inventory)

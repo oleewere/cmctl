@@ -1,12 +1,15 @@
 name: "Echo hello on hosts"
 tasks:
   - name: "Echo hello loally"
+    debug: true
     type: LocalCommand
     command: "echo hello local"
   - name: "Echo hello from server"
+    debug: true
     type: RemoteCommand
     command: "echo hello CM server"
     server: true
   - name: "Echo hello from agents"
+    debug: true
     type: RemoteCommand
     command: "echo hello CM agent"
