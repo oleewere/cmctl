@@ -2,4 +2,11 @@ name: "Echo hello on hosts"
 tasks:
   - name: "Echo hello loally"
     type: LocalCommand
-    command: "echo hello"
+    command: "echo hello local"
+  - name: "Echo hello from server"
+    type: RemoteCommand
+    command: "echo hello CM server"
+    server: true
+  - name: "Echo hello from agents"
+    type: RemoteCommand
+    command: "echo hello CM agent"
