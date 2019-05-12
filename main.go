@@ -595,38 +595,53 @@ func main() {
 				Action: func(c *cli.Context) error {
 					cmServer := cm.GetActiveCM()
 					validateActiveCM(cmServer)
-					filter := cm.CreateFilter(c.String("clusters"), c.String("services"), "", "", false)
+					inventoryFile := c.String("inventory")
+					clustersFilter := c.String("clusters")
 
-					deployment := cmServer.GetDeployment()
-					clusterServiceRoleMap := deployment.ClusterServiceRoleMap
+					inventories := make([]cm.Inventory, 0)
+					if len(inventoryFile) > 0 {
+						inventory := cm.ReadInventoryFromFile(inventoryFile)
+						inventories = append(inventories, inventory)
+						clustersFilter = inventory.ClusterName
+					} else {
+						deployment := cmServer.GetDeployment()
+						hosts := cmServer.ListHosts()
+						inventories = cm.CreateInventoriesFromDeploymentsAndHosts(deployment, hosts)
+					}
+					filter := cm.CreateFilter(clustersFilter, c.String("services"), "", "", false)
+
 					var counter int
-					for cluster, serviceMap := range clusterServiceRoleMap {
-						if len(filter.Clusters) > 0 && !cm.SliceContains(cluster, filter.Clusters) {
+					for _, inventory := range inventories {
+						invCluster := inventory.ClusterName
+						if len(filter.Clusters) > 0 && !cm.SliceContains(invCluster, filter.Clusters) {
 							continue
 						}
-						for service, roles := range serviceMap.RolesMap {
+						serviceRoleHostsMap := inventory.ServiceRoleHostsMap
+						for service, roleHostsMap := range serviceRoleHostsMap {
 							if len(filter.Services) > 0 && !cm.SliceContains(service, filter.Services) {
 								continue
 							}
-							var tableData [][]string
-							for _, role := range roles {
-								tableData = append(tableData, []string{role.Name, role.Type, role.HostName, role.ServiceName, role.ClusterName})
+							for roleType, hostRolePairs := range roleHostsMap {
+								var tableData [][]string
+								for _, hostRolePair := range hostRolePairs {
+									tableData = append(tableData, []string{hostRolePair.RoleName, roleType, hostRolePair.HostName, service, invCluster})
+								}
+								prefixData := ""
+								if counter > 0 {
+									prefixData = "\n"
+								}
+								counter++
+								header := fmt.Sprintf("%vRoles - %v (cluster: %v):", prefixData, service, invCluster)
+								printTable(header, []string{"NAME", "TYPE", "HOSTNAME", "SERVICE", "CLUSTER"}, tableData, c)
 							}
-							prefixData := ""
-							if counter > 0 {
-								prefixData = "\n"
-							}
-							counter++
-							header := fmt.Sprintf("%vRoles - %v (cluster: %v):", prefixData, service, cluster)
-							printTable(header, []string{"NAME", "TYPE", "HOSTNAME", "SERVICE", "CLUSTER"}, tableData, c)
 						}
-
 					}
 					return nil
 				},
 				Flags: []cli.Flag{
-					cli.StringFlag{Name: "clusters", Usage: "Cluster filter for roles"},
-					cli.StringFlag{Name: "services", Usage: "Service filter for roles"},
+					cli.StringFlag{Name: "inventory, i", Usage: "Use hosts inventory file"},
+					cli.StringFlag{Name: "clusters, c", Usage: "Cluster filter for roles"},
+					cli.StringFlag{Name: "services, s", Usage: "Service filter for roles"},
 				},
 			},
 			{
@@ -640,16 +655,26 @@ func main() {
 					serviceFilter := c.String("service")
 					rolesFilter := c.String("roles")
 					command := c.String("command")
-					if len(clusters) == 0 {
-						fmt.Println(fmt.Sprintf("Not found any clusters for CM server with id '%v'", cmServer.Name))
-						os.Exit(1)
-					}
-					if len(clusters) > 1 && len(clustersFilter) > 0 {
-						fmt.Println("Parameter 'clusters' is required!")
-						os.Exit(1)
-					}
-					if len(clusters) == 1 {
-						clustersFilter = clusters[0].Name
+					inventoryFile := c.String("inventory")
+
+					inventories := make([]cm.Inventory, 0)
+
+					if len(inventoryFile) > 0 {
+						inventory := cm.ReadInventoryFromFile(inventoryFile)
+						inventories = append(inventories, inventory)
+						clustersFilter = inventory.ClusterName
+					} else {
+						if len(clusters) == 0 {
+							fmt.Println(fmt.Sprintf("Not found any clusters for CM server with id '%v'", cmServer.Name))
+							os.Exit(1)
+						}
+						if len(clusters) > 1 && len(clustersFilter) > 0 {
+							fmt.Println("Parameter 'clusters' is required!")
+							os.Exit(1)
+						}
+						if len(clusters) == 1 {
+							clustersFilter = clusters[0].Name
+						}
 					}
 
 					if len(serviceFilter) == 0 {
@@ -666,9 +691,11 @@ func main() {
 						fmt.Println("Only 1 service can be selected as a filter!")
 						os.Exit(1)
 					}
-					deployment := cmServer.GetDeployment()
-					hosts := cmServer.ListHosts()
-					inventories := cm.CreateInventoriesFromDeploymentsAndHosts(deployment, hosts)
+					if len(inventoryFile) == 0 {
+						deployment := cmServer.GetDeployment()
+						hosts := cmServer.ListHosts()
+						inventories = cm.CreateInventoriesFromDeploymentsAndHosts(deployment, hosts)
+					}
 
 					roleNames := make([]string, 0)
 					for _, inventory := range inventories {
@@ -700,6 +727,7 @@ func main() {
 				},
 				Flags: []cli.Flag{
 					cli.StringFlag{Name: "command, c", Usage: "Command: start/stop/restart"},
+					cli.StringFlag{Name: "inventory, i", Usage: "Use hosts inventory file"},
 					cli.StringFlag{Name: "clusters", Usage: "Clusters filter (comma separated)"},
 					cli.StringFlag{Name: "service, s", Usage: "Services filter"},
 					cli.StringFlag{Name: "roles, r", Usage: "Role type filter (comma separated)"},
