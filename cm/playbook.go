@@ -93,7 +93,6 @@ func LoadPlaybookFile(location string, varsInput string) Playbook {
 		fmt.Print(err)
 		os.Exit(1)
 	}
-	fmt.Println(string(dataBytes))
 	if len(playbookTempl.Inputs) > 0 {
 		for _, input := range playbookTempl.Inputs {
 			if varVal, ok := varInputMap[input.Name]; ok {
