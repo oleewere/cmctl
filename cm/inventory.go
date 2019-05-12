@@ -54,23 +54,22 @@ func CreateInventory(clusterName string, serviceRoleMap ServiceRolesMap, deploym
 	}
 
 	inventory.ClusterName = clusterName
-	inventory = GetInventoryWithHostsForCluster(inventory, clusterName, agentHosts)
+	inventory.EnrichInventoryWithHostsForCluster(clusterName, agentHosts)
 	inventory.ServiceRoleHostsMap = serviceRolesHostsMap
 	inventory.ServiceHostsMap = serviceHostsMap
 
 	return inventory
 }
 
-// GetInventoryWithHostsForCluster enrich inventory struct with hosts for a specific cluster
-func GetInventoryWithHostsForCluster(inventory Inventory, cluster string, agentHosts []Host) Inventory {
+// EnrichInventoryWithHostsForCluster enrich inventory struct with hosts for a specific cluster
+func (i Inventory) EnrichInventoryWithHostsForCluster(cluster string, agentHosts []Host) {
 	clusterHosts := make([]Host, 0)
 	for _, host := range agentHosts {
 		if host.ClusterName == cluster {
 			clusterHosts = append(clusterHosts, host)
 		}
 	}
-	inventory.Hosts = clusterHosts
-	return inventory
+	i.Hosts = clusterHosts
 }
 
 // CreateInventoryFiles generate ansible compatible inventory files from CM deployment descriptor

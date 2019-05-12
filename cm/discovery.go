@@ -15,7 +15,7 @@ func (c CMServer) GetFilteredHosts(filter Filter, inventory *Inventory) map[stri
 		for _, cluster := range filter.Clusters {
 			if inventory == nil {
 				inventory := Inventory{}
-				inventory = GetInventoryWithHostsForCluster(inventory, cluster, cmAgents)
+				inventory.EnrichInventoryWithHostsForCluster(cluster, cmAgents)
 			}
 			for _, host := range inventory.Hosts {
 				hosts[host.HostName] = true
