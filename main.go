@@ -22,8 +22,8 @@ var Version string
 // GitRevString that will be generated during the build as a constant - represents git revision value
 var GitRevString string
 
-// DefaultApiVersion number that is used as api versions in REST api requests e.g. (32): api/v32/..
-const DefaultApiVersion = 32
+// DefaultAPIVersion number that is used as api versions in REST api requests e.g. (32): api/v32/..
+const DefaultAPIVersion = 32
 
 func main() {
 	app := cli.NewApp()
@@ -94,7 +94,7 @@ func main() {
 					username := strings.ToLower(cm.GetStringFlag(c.String("username"), "admin", "Enter CM user"))
 					password := cm.GetPassword(c.String("password"), "Enter CM user password")
 
-					apiVersion := cm.GetStringFlag(c.String("verion"), strconv.Itoa(DefaultApiVersion), "Enter CM API version")
+					apiVersion := cm.GetStringFlag(c.String("verion"), strconv.Itoa(DefaultAPIVersion), "Enter CM API version")
 					apiVersionNum, err := strconv.Atoi(apiVersion)
 
 					if err != nil {
@@ -163,7 +163,7 @@ func main() {
 					username := strings.ToLower(cm.GetStringFlag(c.String("username"), existingCmServer.Username, "Enter CM user"))
 					password := cm.GetPassword(c.String("password"), "Enter CM user password")
 
-					apiVersion := cm.GetStringFlag(c.String("verion"), strconv.Itoa(DefaultApiVersion), "Enter CM API version")
+					apiVersion := cm.GetStringFlag(c.String("verion"), strconv.Itoa(DefaultAPIVersion), "Enter CM API version")
 					apiVersionNum, err := strconv.Atoi(apiVersion)
 
 					if err != nil {
