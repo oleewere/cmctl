@@ -1,0 +1,5 @@
+name: "Echo hello on hosts"
+tasks:
+  - name: "Echo hello loally"
+    type: LocalCommand
+    command: "echo hello"
