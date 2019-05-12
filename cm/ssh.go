@@ -26,7 +26,7 @@ func (c CMServer) RunGatewayCMCommand(command string, printStdOut bool, printEmp
 		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileID)
+	connectionProfile := GetConnectionProfileByID(connectionProfileID)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -69,7 +69,7 @@ func (c CMServer) CopyToCMGateway(source string, dest string) {
 		fmt.Println("No connection profile is attached for the active ambari server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileID)
+	connectionProfile := GetConnectionProfileByID(connectionProfileID)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -96,7 +96,7 @@ func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]
 		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileID)
+	connectionProfile := GetConnectionProfileByID(connectionProfileID)
 	var hosts map[string]bool
 	if len(filteredHosts) > 0 {
 		hosts = filteredHosts
@@ -160,7 +160,7 @@ func (c CMServer) CopyToRemote(source string, dest string, filteredHosts map[str
 		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileID)
+	connectionProfile := GetConnectionProfileByID(connectionProfileID)
 	var hosts map[string]bool
 	if len(filteredHosts) > 0 {
 		hosts = filteredHosts

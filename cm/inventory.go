@@ -80,7 +80,7 @@ func (c CMServer) CreateInventoryFiles(targetDir string, outputFile string, clus
 		fmt.Println("No connection profile is attached for the active CM server entry!")
 		os.Exit(1)
 	}
-	connectionProfile := GetConnectionProfileById(connectionProfileID)
+	connectionProfile := GetConnectionProfileByID(connectionProfileID)
 
 	allHosts := c.ListHosts()
 	deployment := c.GetDeployment()

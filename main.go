@@ -60,8 +60,8 @@ func main() {
 				Usage: "Register new CM server entry",
 				Action: func(c *cli.Context) error {
 					name := cm.GetStringFlag(c.String("name"), "", "Enter CM server name")
-					cmEntryId := cm.GetCMEntryId(name)
-					if len(cmEntryId) > 0 {
+					cmEntryID := cm.GetCMEntryID(name)
+					if len(cmEntryID) > 0 {
 						fmt.Println("CM server entry already exists with id " + name)
 						os.Exit(1)
 					}
@@ -129,7 +129,7 @@ func main() {
 						os.Exit(1)
 					}
 					cmServerName := args.Get(0)
-					existingCmServer := cm.GetCMById(cmServerName)
+					existingCmServer := cm.GetCMByID(cmServerName)
 					if len(existingCmServer.Name) == 0 {
 						fmt.Println("CM server entry does not exist with id " + cmServerName)
 						os.Exit(1)
@@ -195,8 +195,8 @@ func main() {
 						os.Exit(1)
 					}
 					name := c.Args().First()
-					cmEntryId := cm.GetCMEntryId(name)
-					if len(cmEntryId) == 0 {
+					cmEntryID := cm.GetCMEntryID(name)
+					if len(cmEntryID) == 0 {
 						fmt.Println("CM server entry does not exist with id " + name)
 						os.Exit(1)
 					}
@@ -217,8 +217,8 @@ func main() {
 						os.Exit(1)
 					}
 					name := c.Args().First()
-					cmEntryId := cm.GetCMEntryId(name)
-					if len(cmEntryId) == 0 {
+					cmEntryID := cm.GetCMEntryID(name)
+					if len(cmEntryID) == 0 {
 						fmt.Println("CM server entry does not exist with id " + name)
 						os.Exit(1)
 					}
@@ -371,8 +371,8 @@ func main() {
 				Usage:   "Create new connection profile",
 				Action: func(c *cli.Context) error {
 					name := cm.GetStringFlag(c.String("name"), "", "Enter connection profile name")
-					connProfileId := cm.GetConnectionProfileEntryId(name)
-					if len(connProfileId) > 0 {
+					connProfileID := cm.GetConnectionProfileEntryID(name)
+					if len(connProfileID) > 0 {
 						fmt.Println("Connection profile entry already exists with id " + name)
 						os.Exit(1)
 					}
@@ -444,19 +444,19 @@ func main() {
 						}
 					} else {
 						cmServerID := args.Get(1)
-						cm.GetCMById(cmServerID)
+						cm.GetCMByID(cmServerID)
 						if len(cmServer.Name) == 0 {
 							fmt.Println("Cannot find specific CM server entry")
 							os.Exit(1)
 						}
 					}
-					profile := cm.GetConnectionProfileById(profileID)
+					profile := cm.GetConnectionProfileByID(profileID)
 					if len(profile.Name) == 0 {
 						fmt.Println("Cannot find specific connection profile entry")
 						os.Exit(1)
 					}
 
-					cm.SetProfileIdForCMEntry(cmServer.Name, profile.Name)
+					cm.SetProfileIDForCMEntry(cmServer.Name, profile.Name)
 					msg := fmt.Sprintf("Attach profile '%s' to '%s'", profile.Name, cmServer.Name)
 					fmt.Println(msg)
 					return nil
@@ -472,13 +472,13 @@ func main() {
 						os.Exit(1)
 					}
 					name := c.Args().First()
-					profileEntryId := cm.GetConnectionProfileEntryId(name)
-					if len(profileEntryId) == 0 {
+					profileEntryID := cm.GetConnectionProfileEntryID(name)
+					if len(profileEntryID) == 0 {
 						fmt.Println("Connection profile entry does not exist with id " + name)
 						os.Exit(1)
 					}
-					cm.DeRegisterConnectionProfile(profileEntryId)
-					msg := fmt.Sprintf("Connection profile '%s' has been deleted successfully", profileEntryId)
+					cm.DeRegisterConnectionProfile(profileEntryID)
+					msg := fmt.Sprintf("Connection profile '%s' has been deleted successfully", profileEntryID)
 					fmt.Println(msg)
 					return nil
 				},
