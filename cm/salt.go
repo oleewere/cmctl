@@ -14,8 +14,8 @@ const saltBinaryPrefixDefault = "sudo /opt/salt_*/bin"
 const saltBinaryDefault = "salt"
 const saltScriptsFolderDefault = "/srv"
 
-// ExecuteSaltCommand execute a command on all minions
-func (c CMServer) ExecuteSaltCommand(command string, rawCommand string, saltBinaryPathPrefix string, saltBinary string) {
+// RunSaltCommand execute a command on all minions
+func (c CMServer) RunSaltCommand(command string, rawCommand string, saltBinaryPathPrefix string, saltBinary string) {
 	if len(saltBinary) == 0 {
 		saltBinary = saltBinaryDefault
 	}

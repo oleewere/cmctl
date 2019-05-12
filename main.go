@@ -1115,7 +1115,7 @@ func main() {
 						fmt.Println("Command parameter is missing! (use 'command' or 'c')")
 						os.Exit(1)
 					}
-					cmServer.ExecuteSaltCommand(command, c.String("raw-command"), c.String("prefix"), c.String("binary"))
+					cmServer.RunSaltCommand(command, c.String("raw-command"), c.String("prefix"), c.String("binary"))
 					return nil
 				},
 				Flags: []cli.Flag{

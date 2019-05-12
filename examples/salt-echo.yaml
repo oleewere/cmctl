@@ -1,0 +1,12 @@
+name: "Echo hello through salt"
+tasks:
+  - name: "Echo hello through salt by simple command"
+    debug: true
+    type: SaltCommand
+    command: "echo hello salt"
+  - name: "Echo hello through salt by raw command"
+    debug: true
+    type: SaltCommand
+    command: "'*' cmd.run 'echo hello raw salt'"
+    parameters:
+      raw: true

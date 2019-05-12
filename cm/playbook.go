@@ -161,6 +161,7 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 					fmt.Println(fmt.Sprintf("CM server '%v' is not cloudbreak managed!", c.Name))
 					os.Exit(1)
 				}
+				c.ExecuteSaltCommand(task)
 			}
 			if task.Type == ServiceConfigUpdate {
 				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
@@ -329,6 +330,29 @@ func (c CMServer) ExecuteRemoteCommandTask(task Task, filteredHosts map[string]b
 	if len(task.Command) > 0 {
 		fmt.Println("Execute remote command: " + task.Command)
 		c.RunRemoteHostCommand(task.Command, filteredHosts, task.CMServerFilter, inventory)
+	}
+}
+
+// ExecuteSaltCommand execute salt command
+func (c CMServer) ExecuteSaltCommand(task Task) {
+	if len(task.Command) > 0 {
+		rawCommand := ""
+		binaryPrefix := ""
+		binary := ""
+		if task.Parameters != nil {
+			if rawVal, ok := task.Parameters["raw"]; ok {
+				if rawVal == "true" {
+					rawCommand = task.Command
+				}
+			}
+			if binaryPrefixVal, ok := task.Parameters["binaryPrefix"]; ok {
+				binaryPrefix = binaryPrefixVal
+			}
+			if binaryVal, ok := task.Parameters["binary"]; ok {
+				binary = binaryVal
+			}
+		}
+		c.RunSaltCommand(task.Command, rawCommand, binaryPrefix, binary)
 	}
 }
 
