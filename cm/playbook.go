@@ -66,17 +66,34 @@ type Input struct {
 // LoadPlaybookFile read a playbook yaml file and transform it to a Playbook object
 func LoadPlaybookFile(location string, varsInput string) Playbook {
 	varInputMap := createVarMap(varsInput)
-	data, err := ioutil.ReadFile(location)
-	if err != nil {
-		fmt.Print(err)
-		os.Exit(1)
+	var dataBytes []byte
+	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {
+		data, err := DownloadFileInMemory(location)
+		fmt.Println("here")
+		if err != nil {
+			fmt.Print(err)
+			os.Exit(1)
+		}
+		dataBytes = data
+	} else {
+		fileLocation := location
+		if strings.HasPrefix("file://", location) {
+			fileLocation = strings.TrimPrefix("file://", location)
+		}
+		data, err := ioutil.ReadFile(fileLocation)
+		if err != nil {
+			fmt.Print(err)
+			os.Exit(1)
+		}
+		dataBytes = data
 	}
 	playbookTempl := Playbook{}
-	err = yaml.Unmarshal([]byte(data), &playbookTempl)
+	err := yaml.Unmarshal(dataBytes, &playbookTempl)
 	if err != nil {
 		fmt.Print(err)
 		os.Exit(1)
 	}
+	fmt.Println(string(dataBytes))
 	if len(playbookTempl.Inputs) > 0 {
 		for _, input := range playbookTempl.Inputs {
 			if varVal, ok := varInputMap[input.Name]; ok {
@@ -92,7 +109,7 @@ func LoadPlaybookFile(location string, varsInput string) Playbook {
 		}
 	}
 	templ := template.New("playbook template")
-	textTemplate, _ := templ.Parse(fmt.Sprintf("%s", data))
+	textTemplate, _ := templ.Parse(fmt.Sprintf("%s", dataBytes))
 	var tpl bytes.Buffer
 	textTemplate.Execute(&tpl, varInputMap)
 

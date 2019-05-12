@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -48,4 +49,19 @@ func DownloadFile(filepath string, url string) error {
 		return err
 	}
 	return nil
+}
+
+// DownloadFileInMemory download file as bytes
+func DownloadFileInMemory(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	bytesResp, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytesResp, nil
 }

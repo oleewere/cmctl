@@ -1191,19 +1191,22 @@ func main() {
 		Action: func(c *cli.Context) error {
 			cmServer := cm.GetActiveCM()
 			validateActiveCM(cmServer)
-			playbookFile := c.String("file")
+			playbookFileParam := c.String("file")
 			inventoryFile := c.String("inventory")
-			if len(playbookFile) == 0 {
+			if len(playbookFileParam) == 0 {
 				fmt.Println("Provide -f or --file parameter")
 				os.Exit(1)
 			}
+			playbookFiles := strings.Split(playbookFileParam, ",")
 			var inventory *cm.Inventory
 			if len(inventoryFile) > 0 {
 				inventoryVal := cm.ReadInventoryFromFile(inventoryFile)
 				inventory = &inventoryVal
 			}
-			playbook := cm.LoadPlaybookFile(playbookFile, c.String("vars"))
-			cmServer.ExecutePlaybook(playbook, inventory)
+			for _, playbookFile := range playbookFiles {
+				playbook := cm.LoadPlaybookFile(playbookFile, c.String("vars"))
+				cmServer.ExecutePlaybook(playbook, inventory)
+			}
 			return nil
 		},
 		Flags: []cli.Flag{
