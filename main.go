@@ -639,7 +639,7 @@ func main() {
 					return nil
 				},
 				Flags: []cli.Flag{
-					cli.StringFlag{Name: "inventory, i", Usage: "Use hosts inventory file"},
+					cli.StringFlag{Name: "inventory, i", Usage: "Hosts inventory file"},
 					cli.StringFlag{Name: "clusters, c", Usage: "Cluster filter for roles"},
 					cli.StringFlag{Name: "services, s", Usage: "Service filter for roles"},
 				},
@@ -727,7 +727,7 @@ func main() {
 				},
 				Flags: []cli.Flag{
 					cli.StringFlag{Name: "command, c", Usage: "Command: start/stop/restart"},
-					cli.StringFlag{Name: "inventory, i", Usage: "Use hosts inventory file"},
+					cli.StringFlag{Name: "inventory, i", Usage: "Hosts inventory file"},
 					cli.StringFlag{Name: "clusters", Usage: "Clusters filter (comma separated)"},
 					cli.StringFlag{Name: "service, s", Usage: "Services filter"},
 					cli.StringFlag{Name: "roles, r", Usage: "Role type filter (comma separated)"},
@@ -1158,18 +1158,25 @@ func main() {
 			cmServer := cm.GetActiveCM()
 			validateActiveCM(cmServer)
 			command := c.String("command")
+			inventoryFile := c.String("inventory")
 			if len(command) == 0 {
 				fmt.Println("Command parameter is missing! (use 'command' or 'c')")
 				os.Exit(1)
 			}
+			var inventory *cm.Inventory
+			if len(inventoryFile) > 0 {
+				inventoryVal := cm.ReadInventoryFromFile(inventoryFile)
+				inventory = &inventoryVal
+			}
 			filter := cm.CreateFilter(c.String("clusters"), c.String("services"), c.String("roles"), c.String("hosts"), c.Bool("server"))
 			filter.Roles = cm.UpperAllInSlice(filter.Roles)
-			hosts := cmServer.GetFilteredHosts(filter)
-			cmServer.RunRemoteHostCommand(command, hosts, filter.Server)
+			hosts := cmServer.GetFilteredHosts(filter, inventory)
+			cmServer.RunRemoteHostCommand(command, hosts, filter.Server, inventory)
 			return nil
 		},
 		Flags: []cli.Flag{
 			cli.StringFlag{Name: "command, c", Usage: "Command to execute on the remote hosts"},
+			cli.StringFlag{Name: "inventory, i", Usage: "Hosts inventory file"},
 			cli.BoolFlag{Name: "server", Usage: "Filter on CM server"},
 			cli.StringFlag{Name: "clusters", Usage: "Filter on clusters (comma separated)"},
 			cli.StringFlag{Name: "services", Usage: "Filter on services (comma separated)"},

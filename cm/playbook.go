@@ -105,17 +105,17 @@ func LoadPlaybookFile(location string, varsInput string) Playbook {
 }
 
 // ExecutePlaybook runs tasks on CM hosts based on a playbook object
-func (c CMServer) ExecutePlaybook(playbook Playbook, inventories []Inventory) {
+func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 	tasks := playbook.Tasks
 	for _, task := range tasks {
 		if len(task.Type) > 0 {
 			filteredHosts := make(map[string]bool)
 			if !task.CMAgentFilter {
 				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
-				filteredHosts = c.GetFilteredHosts(filter)
+				filteredHosts = c.GetFilteredHosts(filter, inventory)
 			}
 			if task.Type == RemoteCommand {
-				c.ExecuteRemoteCommandTask(task, filteredHosts)
+				c.ExecuteRemoteCommandTask(task, filteredHosts, inventory)
 			}
 			if task.Type == LocalCommand {
 				ExecuteLocalCommandTask(task)
@@ -124,7 +124,7 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventories []Inventory) {
 				ExecuteDownloadFileTask(task)
 			}
 			if task.Type == Upload {
-				c.ExecuteUploadFileTask(task, filteredHosts)
+				c.ExecuteUploadFileTask(task, filteredHosts, inventory)
 			}
 			/*
 				if task.Type == Config {
@@ -203,15 +203,15 @@ func (c CMServer) ExecuteConfigCommand(task Task) {
 */
 
 // ExecuteRemoteCommandTask executes a remote command on filtered hosts
-func (c CMServer) ExecuteRemoteCommandTask(task Task, filteredHosts map[string]bool) {
+func (c CMServer) ExecuteRemoteCommandTask(task Task, filteredHosts map[string]bool, inventory *Inventory) {
 	if len(task.Command) > 0 {
 		fmt.Println("Execute remote command: " + task.Command)
-		c.RunRemoteHostCommand(task.Command, filteredHosts, task.CMServerFilter)
+		c.RunRemoteHostCommand(task.Command, filteredHosts, task.CMServerFilter, inventory)
 	}
 }
 
 // ExecuteUploadFileTask upload a file to specific (filtered) hosts
-func (c CMServer) ExecuteUploadFileTask(task Task, filteredHosts map[string]bool) {
+func (c CMServer) ExecuteUploadFileTask(task Task, filteredHosts map[string]bool, inventory *Inventory) {
 	if task.Parameters != nil {
 		haveSourceFile := false
 		haveTargetFile := false
@@ -226,7 +226,7 @@ func (c CMServer) ExecuteUploadFileTask(task Task, filteredHosts map[string]bool
 					cmServerGatewayAddress = c.Hostname
 				}
 				// TODO if server filter is used with gateway ?
-				c.CopyToRemote(sourceVal, targetVal, filteredHosts, cmServerGatewayAddress)
+				c.CopyToRemote(sourceVal, targetVal, filteredHosts, cmServerGatewayAddress, inventory)
 			}
 		}
 		if !haveSourceFile {

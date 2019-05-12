@@ -90,7 +90,7 @@ func (c CMServer) CopyToCMGateway(source string, dest string) {
 }
 
 // RunRemoteHostCommand executes bash commands on CM hosts
-func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]bool, skipJump bool) map[string]RemoteResponse {
+func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]bool, skipJump bool, inventory *Inventory) map[string]RemoteResponse {
 	connectionProfileID := c.ConnectionProfile
 	if len(connectionProfileID) == 0 {
 		fmt.Println("No connection profile is attached for the active CM server entry!")
@@ -101,7 +101,7 @@ func (c CMServer) RunRemoteHostCommand(command string, filteredHosts map[string]
 	if len(filteredHosts) > 0 {
 		hosts = filteredHosts
 	} else {
-		hosts = c.GetFilteredHosts(Filter{})
+		hosts = c.GetFilteredHosts(Filter{}, inventory)
 	}
 	response := make(map[string]RemoteResponse)
 	var wg sync.WaitGroup
@@ -154,7 +154,7 @@ func DownloadViaScp(sshConfig *easyssh.MakeConfig, source string, dest string, s
 }
 
 // CopyToRemote copy local file to remote host(s)
-func (c CMServer) CopyToRemote(source string, dest string, filteredHosts map[string]bool, gateway string) {
+func (c CMServer) CopyToRemote(source string, dest string, filteredHosts map[string]bool, gateway string, inventory *Inventory) {
 	connectionProfileID := c.ConnectionProfile
 	if len(connectionProfileID) == 0 {
 		fmt.Println("No connection profile is attached for the active CM server entry!")
@@ -165,7 +165,7 @@ func (c CMServer) CopyToRemote(source string, dest string, filteredHosts map[str
 	if len(filteredHosts) > 0 {
 		hosts = filteredHosts
 	} else {
-		hosts = c.GetFilteredHosts(Filter{})
+		hosts = c.GetFilteredHosts(Filter{}, inventory)
 	}
 	var wg sync.WaitGroup
 	wg.Add(len(hosts))
