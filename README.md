@@ -102,7 +102,7 @@ cmctl -i my-generated-inventory.ini exec -c "echo hello" --services zookeeper
 
 ### Using playbooks
 
-In a specific `yaml` file format, you can define playbooks for yourself (in order to execute a list of commands). 
+By a specific `yaml` file format, you can define playbooks for yourself (in order to execute a list of commands). 
 
 ```bash
 # -i is optional, can work without inventory (using CM api)
@@ -110,7 +110,7 @@ In a specific `yaml` file format, you can define playbooks for yourself (in orde
 cmctl playbook -i my-generated-inventory.ini -f examples/echo.yaml
 ```
 
-The following commands are supported:
+The following commands are supported (see `type` task field):
 
 #### LocalCommand
 
