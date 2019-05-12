@@ -981,8 +981,8 @@ func main() {
 		Usage: "Hosts inventory (ansible compatible) related operations",
 		Subcommands: []cli.Command{
 			{
-				Name:    "generate",
-				Aliases: []string{"g"},
+				Name:    "create",
+				Aliases: []string{"c"},
 				Usage:   "Generate host inventory files",
 				Action: func(c *cli.Context) error {
 					cmServer := cm.GetActiveCM()
@@ -1022,6 +1022,22 @@ func main() {
 					cli.StringFlag{Name: "output, o", Usage: "Output file for 1 inventory file"},
 					cli.StringFlag{Name: "cluster, c", Usage: "Cluster filter (required for 'output' option)"},
 					cli.StringFlag{Name: "server-hostname, s", Usage: "Override CM server hostname"},
+				},
+			},
+			{
+				Name:    "show",
+				Aliases: []string{"s"},
+				Usage:   "Print inventory file mappings in JSON format",
+				Action: func(c *cli.Context) error {
+					cmServer := cm.GetActiveCM()
+					validateActiveCM(cmServer)
+					iniFile := c.String("inventory")
+					inventory := cm.ReadInventoryFromFile(iniFile)
+					fmt.Println("Show inventory", inventory)
+					return nil
+				},
+				Flags: []cli.Flag{
+					cli.StringFlag{Name: "inventory, i", Usage: "Inventory file"},
 				},
 			},
 		},

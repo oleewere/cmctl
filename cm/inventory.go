@@ -5,8 +5,6 @@ import (
 	"os"
 	"path"
 	"strings"
-
-	"github.com/go-ini/ini"
 )
 
 // CreateInventoriesFromDeploymentsAndHosts create struct that holds hostnames by services/roles for all clusters
@@ -98,56 +96,62 @@ func (c CMServer) CreateInventoryFiles(targetDir string, outputFile string, clus
 			} else {
 				iniFileLocation = outputFile
 			}
-			cfg := ini.Empty()
+			cfg := CreateIniConfiguration()
 
-			cfg.NewRawSection("server", serverHostname+"\n")
+			cfg.AddSection("server").AddSectionValue(serverHostname)
 
-			agentRawBody := ""
+			agentSection := cfg.AddSection("agent")
 			for _, agentHost := range inventory.Hosts {
-				agentRawBody += (agentHost.HostName + "\n")
+				agentSection.AddSectionValue(agentHost.HostName)
 			}
-			cfg.NewRawSection("agent", agentRawBody)
 
 			for service, serviceHosts := range inventory.ServiceHostsMap {
-				serviceSection := fmt.Sprintf("service.%v", service)
-				serviceRawBody := ""
+				serviceSectionName := fmt.Sprintf("service.%v", service)
+				serviceSection := cfg.AddSection(serviceSectionName)
 				for _, host := range serviceHosts {
-					serviceRawBody += (host + "\n")
+					serviceSection.AddSectionValue(host)
 				}
-				cfg.NewRawSection(serviceSection, serviceRawBody)
 			}
 
 			for service, roleHostsMap := range inventory.ServiceRoleHostsMap {
 				for roleType, hostRolePairs := range roleHostsMap {
-					roleSection := fmt.Sprintf("role.%v.%v", service, strings.ToLower(roleType))
-					roleRawBody := ""
+					roleSectionName := fmt.Sprintf("role.%v.%v", service, strings.ToLower(roleType))
+					roleSection := cfg.AddSection(roleSectionName)
 					for _, hostRolePair := range hostRolePairs {
-						roleRawBody += (hostRolePair.HostName + "\n")
+						roleSection.AddSectionValue(hostRolePair.HostName)
 					}
-					cfg.NewRawSection(roleSection, roleRawBody)
-					roleVarsSection := fmt.Sprintf("%v:vars", roleSection)
-					roleVarsRawBody := ""
+					roleVarsSectionName := fmt.Sprintf("%v:vars", roleSectionName)
+					roleVarSection := cfg.AddSection(roleVarsSectionName)
 					for _, hostRolePair := range hostRolePairs {
-						roleNameHostPair := fmt.Sprintf("%v=%v\n", hostRolePair.RoleName, hostRolePair.HostName)
-						roleVarsRawBody += roleNameHostPair
+						roleVarSection.AddSectionKeyValue(hostRolePair.RoleName, hostRolePair.HostName)
 					}
-					cfg.NewRawSection(roleVarsSection, roleVarsRawBody)
 				}
 			}
+			cfg.AddSection("cluster").AddSectionKeyValue("name", inventory.ClusterName)
 
-			cfg.NewRawSection("cluster", fmt.Sprintf("name=%v\n", inventory.ClusterName))
+			allVarsSection := cfg.AddSection("all:vars")
+			allVarsSection.AddSectionKeyValue("ansible_ssh_user", connectionProfile.Username)
+			allVarsSection.AddSectionKeyValue("ansible_ssh_private_key_file", connectionProfile.KeyPath)
+			allVarsSection.AddSectionKeyValue("ansible_ssh_common_args", "'-o StrictHostKeyChecking=no'")
 
-			allVarsRawBody := ""
-			allVarsRawBody += (fmt.Sprintf("%v=%v", "ansible_ssh_user", connectionProfile.Username) + "\n")
-			allVarsRawBody += (fmt.Sprintf("%v=%v", "ansible_ssh_private_key_file", connectionProfile.KeyPath) + "\n")
-			allVarsRawBody += (fmt.Sprintf("%v=%v", "ansible_ssh_common_args", "'-o StrictHostKeyChecking=no'") + "\n")
-			cfg.NewRawSection("all:vars", allVarsRawBody)
-
-			cfg.NewRawSection("defaults", "host_key_checking=False\n")
-			cfg.SaveTo(iniFileLocation)
+			cfg.AddSection("defaults").AddSectionKeyValue("host_key_checking", "False")
+			cfg.WriteIniConfiguration(iniFileLocation, []string{"cluster", "server", "agent"})
 			fmt.Println(fmt.Sprintf("Inventory file '%v' has been created.", iniFileLocation))
 		}
 	}
+}
+
+// ReadInventoryFromFile parse inventory file and create inventory resource from it
+func ReadInventoryFromFile(inventoryFilePath string) Inventory {
+	inventory := Inventory{}
+	cfg, err := LoadIniFile(inventoryFilePath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("TODO")
+	fmt.Println(*cfg.Sections)
+	return inventory
 }
 
 func containsRoleHosts(host string, roleHostsPairs []HostRoleNamePair) bool {

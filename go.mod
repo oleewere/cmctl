@@ -3,7 +3,7 @@ module github.com/oleewere/cmctl
 require (
 	github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6 // indirect
 	github.com/appleboy/easyssh-proxy v1.2.0
-	github.com/go-ini/ini v1.42.0
+	github.com/go-ini/ini v1.42.0 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/urfave/cli v1.20.0

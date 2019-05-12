@@ -132,6 +132,18 @@ type Inventory struct {
 	ServiceHostsMap     map[string][]string
 }
 
+// IniConfiguration holds inventory config sections by name
+type IniConfiguration struct {
+	Sections *map[string]Section
+}
+
+// Section configuration sections for inventory files
+type Section struct {
+	Name        string
+	KeyValueMap map[string]string
+	Values      *[]string
+}
+
 // HostRoleNamePair holds host name and role name for inventory resource
 type HostRoleNamePair struct {
 	HostName string
