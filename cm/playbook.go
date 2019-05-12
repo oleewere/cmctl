@@ -24,10 +24,10 @@ const (
 	Download = "Download"
 	// Upload command type for uploading files to the agent hosts
 	Upload = "Upload"
-	// ServiceConfig command type for managing (update) service configuration
-	ServiceConfig = "ServiceConfig"
-	// RoleConfig command type for managing (update) role configuration
-	RoleConfig = "RoleConfig"
+	// ServiceConfigUpdate command type for managing (update) service configuration
+	ServiceConfigUpdate = "ServiceConfigUpdate"
+	// RoleConfigUpdate command type for managing (update) role configuration
+	RoleConfigUpdate = "RoleConfigUpdate"
 	// ServiceCpmmand runs a CM service command (like start or stop) against services
 	ServiceCpmmand = "ServiceCommand"
 	// RoleCommand runs a CM role command (like start or stop) against roles
@@ -44,18 +44,19 @@ type Playbook struct {
 
 // Task represents a task that can be executed on an CM hosts
 type Task struct {
-	Name           string            `yaml:"name"`
-	Type           string            `yaml:"type"`
-	Debug          bool              `yaml:"debug"`
-	Command        string            `yaml:"command"`
-	CMServerFilter bool              `yaml:"server"`
-	CMAgentFilter  bool              `yaml:"agent"`
-	ClusterFilter  string            `yaml:"clusters"`
-	HostFilter     string            `yaml:"hosts"`
-	ServiceFilter  string            `yaml:"services"`
-	RoleTypeFilter string            `yaml:"role_types"`
-	RoleNames      string            `yaml:"roles"`
-	Parameters     map[string]string `yaml:"parameters,omitempty"`
+	Name           string              `yaml:"name"`
+	Type           string              `yaml:"type"`
+	Debug          bool                `yaml:"debug"`
+	Command        string              `yaml:"command"`
+	CMServerFilter bool                `yaml:"server"`
+	CMAgentFilter  bool                `yaml:"agent"`
+	ClusterFilter  string              `yaml:"cluster"`
+	HostFilter     string              `yaml:"hosts"`
+	ServiceFilter  string              `yaml:"service"`
+	RoleTypeFilter string              `yaml:"role"`
+	RoleNames      string              `yaml:"roleName"`
+	Configs        []map[string]string `yaml:"configs,omitempty"`
+	Parameters     map[string]string   `yaml:"parameters,omitempty"`
 }
 
 // Input represents a variable that needs to be provided by users (if default value is empty)
@@ -151,6 +152,21 @@ func (c CMServer) ExecutePlaybook(playbook Playbook, inventory *Inventory) {
 			if task.Type == SaltSyncCommand {
 				c.ExecuteSaltSyncCommand(task)
 			}
+			if task.Type == ServiceConfigUpdate {
+				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
+				clusters := c.getClusterNames(task, filter, inventory)
+				fmt.Println(clusters)
+				for _, cluster := range clusters {
+					c.ExecuteConfigUpdate(task, cluster, filter, false)
+				}
+			}
+			if task.Type == RoleConfigUpdate {
+				filter := CreateFilter(task.ClusterFilter, task.ServiceFilter, task.RoleTypeFilter, task.HostFilter, task.CMServerFilter)
+				clusters := c.getClusterNames(task, filter, inventory)
+				for _, cluster := range clusters {
+					c.ExecuteConfigUpdate(task, cluster, filter, true)
+				}
+			}
 			/*
 				if task.Type == Config {
 					c.ExecuteConfigCommand(task)
@@ -194,38 +210,81 @@ func (c CMServer) ExecuteCMCommand(task Task) {
 	}
 }
 
-/*
-// ExecuteConfigCommand executes a configuration upgrade
-func (c CMServer) ExecuteConfigCommand(task Task) {
-	if task.Parameters != nil {
-		haveConfigType := false
-		haveConfigKey := false
-		haveConfigValue := false
-		if configType, ok := task.Parameters["config_type"]; ok {
-			haveConfigType = true
-			if configKey, ok := task.Parameters["config_key"]; ok {
-				haveConfigKey = true
-				if configValue, ok := task.Parameters["config_value"]; ok {
-					haveConfigValue = true
-					a.SetConfig(configType, configKey, configValue)
+// ExecuteConfigUpdate executes a configuration update against roles or services
+func (c CMServer) ExecuteConfigUpdate(task Task, cluster string, filter Filter, roleConfig bool) {
+	fmt.Println(cluster)
+	if task.Configs != nil {
+		clear := false
+		configGroups := make([]string, 0)
+		if task.Parameters != nil {
+			if clearVal, ok := task.Parameters["clear"]; ok {
+				if clearVal == "true" {
+					clear = true
 				}
 			}
+			if configGroupVal, ok := task.Parameters["groups"]; ok {
+				configGroups = strings.Split(configGroupVal, ",")
+			}
 		}
-		if !haveConfigType {
-			fmt.Println("'config_type' parameter is required for 'Upload' task")
+
+		configMap := make(map[string]string)
+
+		for _, config := range task.Configs {
+			foundKey := ""
+			foundValue := ""
+			for key, value := range config {
+				if key == "key" {
+					foundKey = value
+				}
+				if key == "value" {
+					foundValue = value
+				}
+			}
+			if len(foundKey) == 0 {
+				fmt.Println("'key' is required for configs entry!")
+				os.Exit(1)
+			}
+			if clear {
+				configMap[foundKey] = ""
+			} else {
+				if len(foundValue) == 0 {
+					fmt.Println("'value' is required for configs entry if clear parameter is not set!")
+					os.Exit(1)
+				}
+				configMap[foundKey] = foundValue
+			}
+		}
+		if len(filter.Services) == 0 || len(filter.Services) > 1 {
+			fmt.Println("Use exactly 1 service filter!")
 			os.Exit(1)
 		}
-		if !haveConfigKey {
-			fmt.Println("'config_key' parameter is required for 'Upload' task")
-			os.Exit(1)
-		}
-		if !haveConfigValue {
-			fmt.Println("'config_value' parameter is required for 'Upload' task")
-			os.Exit(1)
+
+		if roleConfig {
+			if len(filter.Roles) == 0 || len(filter.Roles) > 1 {
+				fmt.Println("Use exactly 1 role filter!")
+				os.Exit(1)
+			}
+			roleConfigGroups := c.ListRoleConfigGroups(cluster, filter.Services[0], true)
+			roleType := strings.ToUpper(filter.Roles[0])
+			roleGroupsForType := make([]string, 0)
+			for _, roleConfigGroup := range roleConfigGroups {
+				if roleConfigGroup.RoleType == roleType {
+					if len(configGroups) > 0 && !SliceContains(roleConfigGroup.Name, configGroups) {
+						continue
+					}
+					roleGroupsForType = append(roleGroupsForType, roleConfigGroup.Name)
+				}
+			}
+
+			for _, roleGroup := range roleGroupsForType {
+				c.UpdateRoleConfigs(cluster, filter.Services[0], filter.Roles[0], roleGroup, configMap, clear, true)
+			}
+
+		} else {
+			c.UpdateServiceConfigs(cluster, filter.Services[0], configMap, clear, true)
 		}
 	}
 }
-*/
 
 // ExecuteRemoteCommandTask executes a remote command on filtered hosts
 func (c CMServer) ExecuteRemoteCommandTask(task Task, filteredHosts map[string]bool, inventory *Inventory) {
@@ -341,4 +400,23 @@ func createVarMap(varMapStr string) map[string]interface{} {
 		}
 	}
 	return resultMap
+}
+
+func (c CMServer) getClusterNames(task Task, filter Filter, inventory *Inventory) []string {
+	clusterNames := make([]string, 0)
+	if inventory != nil {
+		clusterName := inventory.ClusterName
+		if len(filter.Clusters) == 0 || SliceContains(clusterName, filter.Clusters) {
+			clusterNames = append(clusterNames, clusterName)
+		}
+	} else {
+		clusters := c.ListClusters()
+		for _, cluster := range clusters {
+			if len(filter.Clusters) > 0 && !SliceContains(cluster.Name, filter.Clusters) {
+				continue
+			}
+			clusterNames = append(clusterNames, cluster.Name)
+		}
+	}
+	return clusterNames
 }

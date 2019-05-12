@@ -1,0 +1,25 @@
+name: "Update configs example"
+tasks:
+  - name: "Update ZK service config"
+    debug: true
+    type: ServiceConfigUpdate
+    service: zookeeper
+    configs:
+    - key: smon_derived_configs_safety_valve
+      value: true
+  - name: "Clear ZK servie config"
+    debug: true
+    type: ServiceConfigUpdate
+    service: zookeeper
+    configs:
+      - key: smon_derived_configs_safety_valve
+    parameters:
+      clear: true
+  - name: "Update ZK role config"
+    debug: true
+    type: RoleConfigUpdate
+    service: zookeeper
+    role: SERVER
+    configs:
+    - key: maxSessionTimeout
+      value: 60000
