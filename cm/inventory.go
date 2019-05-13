@@ -62,7 +62,7 @@ func CreateInventory(clusterName string, serviceRoleMap ServiceRolesMap, deploym
 }
 
 // EnrichInventoryWithHostsForCluster enrich inventory struct with hosts for a specific cluster
-func (i Inventory) EnrichInventoryWithHostsForCluster(cluster string, agentHosts []Host) {
+func (i *Inventory) EnrichInventoryWithHostsForCluster(cluster string, agentHosts []Host) {
 	clusterHosts := make([]Host, 0)
 	for _, host := range agentHosts {
 		if host.ClusterName == cluster {
