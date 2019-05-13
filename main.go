@@ -807,7 +807,7 @@ func main() {
 					}
 					return nil
 				},
-			}
+			},
 		},
 	}
 
