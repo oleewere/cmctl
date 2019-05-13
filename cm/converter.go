@@ -65,6 +65,39 @@ func (c Items) ConvertUsersResponse() []User {
 	return users
 }
 
+// ConvertExternalAccounts convert items response to external accounts per type
+func (c Items) ConvertExternalAccounts() map[string]map[string]string {
+	typeAccountConfigsMap := make(map[string]map[string]string)
+	for _, item := range c.Items {
+		if nameVal, ok := item["name"]; ok {
+			name := nameVal.(string)
+			accountConfigs := make(map[string]string)
+			if accountConfigsVal, ok := item["accountConfigs"]; ok {
+				accountConfigItems := accountConfigsVal.(map[string]interface{})
+				if accountItemVal, ok := accountConfigItems["items"]; ok {
+					accountConfigItem := accountItemVal.([]interface{})
+					for _, accountConfigBlock := range accountConfigItem {
+						accessDetailsMap := accountConfigBlock.(map[string]interface{})
+						accessName := ""
+						accessValue := ""
+						if accessNameVal, ok := accessDetailsMap["name"]; ok {
+							accessName = accessNameVal.(string)
+						}
+						if accessValueVal, ok := accessDetailsMap["value"]; ok {
+							accessValue = accessValueVal.(string)
+						}
+						if len(accessName) > 0 && len(accessValue) > 0 {
+							accountConfigs[accessName] = accessValue
+						}
+					}
+				}
+			}
+			typeAccountConfigsMap[name] = accountConfigs
+		}
+	}
+	return typeAccountConfigsMap
+}
+
 // ConvertServiceConfigResponse convert items response to config items
 func (c Items) ConvertServiceConfigResponse() []ConfigItem {
 	configs := []ConfigItem{}

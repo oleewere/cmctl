@@ -87,6 +87,62 @@ func (c CMServer) GetUsers() []User {
 	return cmItems.ConvertUsersResponse()
 }
 
+// GetExternalAccountCategories returns a list of the supported external account categories
+func (c CMServer) GetExternalAccountCategories() []string {
+	var cmItems Items
+	var uri = "externalAccounts/supportedCategories"
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
+	} else {
+		request := c.CreateGetRequest(uri)
+		cmItems = ProcessCMItems(request)
+	}
+	supportedCategories := make([]string, 0)
+	for _, item := range cmItems.Items {
+		if nameVal, ok := item["name"]; ok {
+			name := nameVal.(string)
+			supportedCategories = append(supportedCategories, name)
+		}
+	}
+	return supportedCategories
+}
+
+// GetExternalAccountTypesByCategory returns a list of the external accounts types by category
+func (c CMServer) GetExternalAccountTypesByCategory(category string) []string {
+	var cmItems Items
+	var uri = fmt.Sprintf("externalAccounts/supportedTypes/%v", category)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
+	} else {
+		request := c.CreateGetRequest(uri)
+		cmItems = ProcessCMItems(request)
+	}
+	accountTypes := make([]string, 0)
+	for _, item := range cmItems.Items {
+		if nameVal, ok := item["type"]; ok {
+			name := nameVal.(string)
+			accountTypes = append(accountTypes, name)
+		}
+	}
+	return accountTypes
+}
+
+// GetExternalAccountsByType gather external accounts with configs by type
+func (c CMServer) GetExternalAccountsByType(accountType string) map[string]map[string]string {
+	var cmItems Items
+	var uri = fmt.Sprintf("externalAccounts/type/%v", accountType)
+	if c.UseGateway {
+		curlCommand := c.CreateGatewayCurlGetCommand(uri)
+		cmItems = ProcessCMItemsFromSSHResponse(c.RunGatewayCMCommand(curlCommand, false, true))
+	} else {
+		request := c.CreateGetRequest(uri)
+		cmItems = ProcessCMItems(request)
+	}
+	return cmItems.ConvertExternalAccounts()
+}
+
 // RunServiceOperation run a service operation (start / stop / restart)
 func (c CMServer) RunServiceOperation(cluster string, service string, command string, verbose bool) []byte {
 	var response []byte
