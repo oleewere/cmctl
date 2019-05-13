@@ -197,7 +197,7 @@ tasks:
 
 #### ServiceCpmmand
 
-`ServiceCpmmand` exeutes service commands against CM Rest API.
+`ServiceCpmmand` exeutes service commands against CM Rest API. The `service` filter is reqired (as comma separated service names).
 
 ```yaml
 name: "Restart ZK service"
@@ -211,7 +211,7 @@ tasks:
 
 #### RoleCommand
 
-`RoleCommand` exeutes role commands against CM Rest API.
+`RoleCommand` exeutes role commands against CM Rest API. The `service` and `role` filter is reqired (role as comma separated role types).
 
 ```yaml
 name: "Restart ZK server role"
@@ -250,7 +250,7 @@ tasks:
 
 #### RoleConfigUpdate
 
-`RoleConfigUpdate` same as `ServiceConfigUpdate`, but that will update the role configuration, therefore you will need to provide `role` filter (as comma separated role types)
+`RoleConfigUpdate` same as `ServiceConfigUpdate`, but that will update the role configuration, therefore you will need to provide `role` filter.
 
 ```yaml
 name: "Update role configs example"
