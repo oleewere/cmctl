@@ -621,19 +621,19 @@ func main() {
 							if len(filter.Services) > 0 && !cm.SliceContains(service, filter.Services) {
 								continue
 							}
+							var tableData [][]string
 							for roleType, hostRolePairs := range roleHostsMap {
-								var tableData [][]string
 								for _, hostRolePair := range hostRolePairs {
 									tableData = append(tableData, []string{hostRolePair.RoleName, roleType, hostRolePair.HostName, service, invCluster})
 								}
-								prefixData := ""
-								if counter > 0 {
-									prefixData = "\n"
-								}
-								counter++
-								header := fmt.Sprintf("%vRoles - %v (cluster: %v):", prefixData, service, invCluster)
-								printTable(header, []string{"NAME", "TYPE", "HOSTNAME", "SERVICE", "CLUSTER"}, tableData, c)
 							}
+							prefixData := ""
+							if counter > 0 {
+								prefixData = "\n"
+							}
+							counter++
+							header := fmt.Sprintf("%vRoles - %v (cluster: %v):", prefixData, service, invCluster)
+							printTable(header, []string{"NAME", "TYPE", "HOSTNAME", "SERVICE", "CLUSTER"}, tableData, c)
 						}
 					}
 					return nil
