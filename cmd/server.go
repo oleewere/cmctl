@@ -10,8 +10,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// DefaultAPIVersion number that is used as api versions in REST api requests e.g. (32): api/v32/..
-const DefaultAPIVersion = 32
+// DefaultAPIVersion number that is used as api versions in REST api requests e.g. (31): api/v31/..
+const DefaultAPIVersion = 31
 
 // ServersCommand CM server registry DB related operations
 func ServersCommand() cli.Command {
